@@ -11,7 +11,7 @@ def right_now() -> int:
     return int(datetime.datetime.now().timestamp())  # I have no idea why I am using this, probably has some reason
 
 
-def parse_time(when: str = "") -> (int, int, int):
+def parse_time(when: str = "") -> tuple[int, int, int]:
     """Return the parsed time in epoch time."""
     cal = Calendar()
     time_struct, parse_status = cal.parse(when)

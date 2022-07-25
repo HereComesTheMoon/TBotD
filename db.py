@@ -104,7 +104,7 @@ class Database(commands.Cog):
 
     @commands.command(hidden=True)
     @pm.is_owner()
-    async def least_used_emojis(self, ctx: discord.ext.commands.Context, *, post: str = ""):
+    async def least_used_emojis(self, ctx: commands.Context, *, post: str = ""):
         emojis = tuple([emoji.id for emoji in self.bot.get_guild(pm.SERVER_ID).emojis])
         cur = await self.bot.db.cursor()
         await cur.execute(f'''SELECT name, emoji_id, uses FROM emojis_custom
@@ -132,7 +132,7 @@ class Database(commands.Cog):
 
     @commands.command(hidden=True)
     @pm.is_owner()
-    async def printdbs(self, ctx: discord.ext.commands.Context):
+    async def printdbs(self, ctx: commands.Context):
         bl.log(self.printdbs, ctx)
         cur = await self.bot.db.cursor()
         await cur.execute('''SELECT * from sqlite_master''')
@@ -141,7 +141,7 @@ class Database(commands.Cog):
 
     @commands.command(hidden=True)
     @pm.is_owner()
-    async def printdb(self, ctx: discord.ext.commands.Context, *, post: str = ""):
+    async def printdb(self, ctx: commands.Context, *, post: str = ""):
         # TODO: This is horrible, and prone to wrecking your stuff if you accidentally SQL inject yourself. Change!
         bl.log(self.printdb, ctx)
         cur = await self.bot.db.cursor()
@@ -162,7 +162,7 @@ class Database(commands.Cog):
         await ctx.reply(content=post + "\n```" + tabs + "```")
 
     @commands.command()
-    async def stats(self, ctx: discord.ext.commands.Context):
+    async def stats(self, ctx: commands.Context):
         """Display statistics of the server!"""
         bl.log(self.stats, ctx)
         data = []

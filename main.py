@@ -101,7 +101,7 @@ async def ping(ctx, *, post: str = ""):
 
 
 @TBotD.command()
-async def portal(ctx: discord.ext.commands.Context, *, arg: str = ""):
+async def portal(ctx: commands.Context, *, arg: str = ""):
     """Create a portal to facilitate inter-channel travel. eg. !portal #silly funny doge."""
     bl.log(portal, ctx)
     if ctx.message.raw_channel_mentions:
@@ -156,7 +156,7 @@ async def portal(ctx: discord.ext.commands.Context, *, arg: str = ""):
 
 @TBotD.command(hidden=True)
 @is_owner()
-async def poast(ctx: discord.ext.commands.Context, *, arg: str):
+async def poast(ctx: commands.Context, *, arg: str):
     """There is no help for you."""
     bl.log(poast, ctx)
     if ',' in arg:  # Format argument, split desired channel from post to be poasted
@@ -176,7 +176,7 @@ async def poast(ctx: discord.ext.commands.Context, *, arg: str):
 
 
 @TBotD.command(hidden=True)
-async def bottle(ctx: discord.ext.commands.Context):
+async def bottle(ctx: commands.Context):
     """This is deprecated for the time being! Use !choose instead."""
     bl.log(bottle, ctx)
     await ctx.reply("The !bottle command is now called !choose. Use that instead.")
@@ -184,7 +184,7 @@ async def bottle(ctx: discord.ext.commands.Context):
 
 @TBotD.command(hidden=True)
 @is_owner()
-async def kill(ctx: discord.ext.commands.Context):
+async def kill(ctx: commands.Context):
     bl.log(kill, ctx)
     print("Shutdown command received.")
     await ctx.message.add_reaction(CATSCREAM)
@@ -215,7 +215,7 @@ async def on_raw_reaction_add(reaction_event: discord.RawReactionActionEvent):
 
 
 @TBotD.event
-async def on_command_error(ctx: discord.ext.commands.Context, error: commands.CommandError):
+async def on_command_error(ctx: commands.Context, error: commands.CommandError):
     bl.error_log.exception(f"on_command_error : {error} : {ctx.message.content}")
 
 
@@ -223,8 +223,7 @@ async def on_command_error(ctx: discord.ext.commands.Context, error: commands.Co
 async def on_member_join(member: discord.Member):
     bl.joinleave_log.warning(f"User {member} joined {member.guild} ({member.guild.id}).")
     owner = TBotD.get_user(OWNER_ID)
-    await owner.send(
-        content=f"User {member} joined {member.guild} ({member.guild.id}). {member.display_avatar.url}")
+    await owner.send(content=f"User {member} joined {member.guild} ({member.guild.id}). {member.display_avatar.url}")
 
 
 @TBotD.event
@@ -232,8 +231,7 @@ async def on_member_remove(member: discord.Member):
     bl.joinleave_log.warning(
         f"User {member} left {member.guild} ({member.guild.id}). Joined at {member.joined_at}.")
     owner = TBotD.get_user(OWNER_ID)
-    await owner.send(
-        content=f"User {member} left {member.guild} ({member.guild.id}). Joined at {member.joined_at}. {member.display_avatar.url}")
+    await owner.send(content=f"User {member} left {member.guild} ({member.guild.id}). Joined at {member.joined_at}. {member.display_avatar.url}")
 
 
 if __name__ == '__main__':
