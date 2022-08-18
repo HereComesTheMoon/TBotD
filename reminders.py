@@ -90,6 +90,7 @@ class Reminders(commands.Cog):
         except discord.HTTPException:
             bl.error_log.exception("Reminder notification error! Not good!")
             owner = self.bot.get_user(OWNER_ID)
+            assert owner is not None
             await owner.send(content="Reminder notification error! Not good!")
             await owner.send(content=f"{p['reminder']}.\n\nYou set a reminder on the <t:{p['queryMade']}>."
                                      f"Link to original query: {p['postUrl']}",

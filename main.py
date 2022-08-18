@@ -3,6 +3,7 @@ from discord.ext import commands
 import fixtwitter
 import moderation
 import threadwatch
+import ownertools
 from config import *
 
 import random
@@ -35,7 +36,9 @@ async def on_ready():
     print("Ready!")
     print(time.strftime("%b %d %Y %H:%M:%S", time.localtime()))
     # Global bot variables. Careful, might overwrite stuff, can be used everywhere.
-    TBotD.db = await aiosqlite.connect("db.db")
+    db: aiosqlite.Connection = await aiosqlite.connect("db.db")
+
+    TBotD.db = db
     TBotD.db.row_factory = aiosqlite.Row  # Important
     TBotD.went_online_at = timeywimey.right_now()
 
@@ -52,6 +55,8 @@ async def on_ready():
     await TBotD.add_cog(fixtwitter.FixTwitter(TBotD))
     # Calls the mods when a :loudspeaker: react is added
     await TBotD.add_cog(moderation.Moderation(TBotD))
+    # Owner tools, to kill the bot and to puppet it
+    await TBotD.add_cog(ownertools.OwnerTools(TBotD, db))
 
 
 
@@ -155,41 +160,10 @@ async def portal(ctx: commands.Context, *, arg: str = ""):
 
 
 @TBotD.command(hidden=True)
-@is_owner()
-async def poast(ctx: commands.Context, *, arg: str):
-    """There is no help for you."""
-    bl.log(poast, ctx)
-    if ',' in arg:  # Format argument, split desired channel from post to be poasted
-        iid, what = arg.split(sep=',', maxsplit=1)
-        iid, what = int(iid.strip()), what.strip()
-
-        try:
-            channel = await TBotD.fetch_channel(iid)
-            await channel.send(what)
-        except discord.NotFound:
-            user = await TBotD.fetch_user(iid)
-            await user.send(what)
-        except discord.HTTPException:
-            bl.error_log.exception("Unable to poast.")
-            await ctx.reply("Unable to poast!")
-            await ctx.message.add_reaction(IDGI)
-
-
-@TBotD.command(hidden=True)
 async def bottle(ctx: commands.Context):
     """This is deprecated for the time being! Use !choose instead."""
     bl.log(bottle, ctx)
     await ctx.reply("The !bottle command is now called !choose. Use that instead.")
-
-
-@TBotD.command(hidden=True)
-@is_owner()
-async def kill(ctx: commands.Context):
-    bl.log(kill, ctx)
-    print("Shutdown command received.")
-    await ctx.message.add_reaction(CATSCREAM)
-    await TBotD.db.close()
-    await TBotD.close()
 
 
 @TBotD.event
@@ -205,20 +179,6 @@ async def on_message(msg: discord.Message):
 async def on_command_error(ctx: commands.Context, error: commands.CommandError):
     bl.error_log.exception(f"on_command_error : {error} : {ctx.message.content}")
 
-
-@TBotD.event
-async def on_member_join(member: discord.Member):
-    bl.joinleave_log.warning(f"User {member} joined {member.guild} ({member.guild.id}).")
-    owner = TBotD.get_user(OWNER_ID)
-    await owner.send(content=f"User {member} joined {member.guild} ({member.guild.id}). {member.display_avatar.url}")
-
-
-@TBotD.event
-async def on_member_remove(member: discord.Member):
-    bl.joinleave_log.warning(
-        f"User {member} left {member.guild} ({member.guild.id}). Joined at {member.joined_at}.")
-    owner = TBotD.get_user(OWNER_ID)
-    await owner.send(content=f"User {member} left {member.guild} ({member.guild.id}). Joined at {member.joined_at}. {member.display_avatar.url}")
 
 
 if __name__ == '__main__':
