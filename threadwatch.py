@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 import botlog as bl
-from config import THREAD_WATCH_CHANNEL_ID, SERVER_ID
+from config import THREAD_WATCH_CHANNEL, SERVER_ID
 
 
 class ThreadWatch(commands.Cog):
@@ -19,7 +19,7 @@ class ThreadWatch(commands.Cog):
             if thread.guild.id != SERVER_ID:
                 return
 
-            tw_channel = await self.bot.fetch_channel(THREAD_WATCH_CHANNEL_ID)
+            tw_channel = await self.bot.fetch_channel(THREAD_WATCH_CHANNEL)
             if tw_channel is None:
                 bl.error_log.exception("Can't find thread-watch channel.")
                 return

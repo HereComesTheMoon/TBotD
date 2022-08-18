@@ -3,28 +3,36 @@ import discord
 from discord.ext import commands
 import sqlite3
 
+# Two modes: 'tbd' and 'test'. 'test' should not be used anymore.
 MODE = 'tbd'
 
 config = configparser.ConfigParser()
 config.read('config.ini')
-KEY = config['config']['key']
 
+
+KEY = config['config']['key']
 OWNER_ID = int(config['config']['OWNER'])
+
+BOT_JOINED_AT = float(config['config']['BOT_JOINED_AT'])
+
 
 SERVER_ID = int(config[MODE]['SERVER'])
 
+THREAD_WATCH_CHANNEL = int(config[MODE]['THREAD_WATCH_CHANNEL'])
 LOGGER_CHANNEL = int(config[MODE]['LOGGER_CHANNEL'])
-
-BOT_JOINED_AT = float(config['config']['BOT_JOINED_AT'])
 
 CW_BAN_ROLE = int(config[MODE]['CW_BAN_ROLE'])
 BLINDED_ROLE = int(config[MODE]['BLINDED_ROLE'])
 MUTED_ROLE = int(config[MODE]['MUTED_ROLE'])
 MOD_ROLE = int(config[MODE]['MOD_ROLE'])
 
-THREAD_WATCH_CHANNEL_ID = int(config[MODE]['THREAD_WATCH_CHANNEL_ID'])
 
-TESTSERVER_ID = int(config['test']['SERVER'])
+# TESTSERVER_ID = int(config['test']['SERVER'])
+
+
+# Miscellaneous stuff, emoji and pictures. Nothing sensitive
+config = configparser.ConfigParser()
+config.read('symbols.ini')
 
 BLUE_PORTAL = config['misc']['BLUE_PORTAL']
 ORANGE_PORTAL = config['misc']['ORANGE_PORTAL']
@@ -33,12 +41,11 @@ ORANGE_PORTAL = config['misc']['ORANGE_PORTAL']
 IDGI = config['misc']['IDGI']
 # Bot reacts with NO to message if it doesn't allow something
 DENIED = config['misc']['DENIED']
-# Owner reacts with XXX to message to delete it. Unnecessary at this point.
-XXX = config['misc']['XXX']
 
 # To alert mods
 LOUDSPEAKER = config['misc']['LOUDSPEAKER']
 
+# 'fun':
 FLUSHED = config['misc']['FLUSHED']
 WAVE = config['misc']['WAVE']
 CONFOUNDED = config['misc']['CONFOUNDED']

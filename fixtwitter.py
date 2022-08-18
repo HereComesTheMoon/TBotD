@@ -2,7 +2,6 @@ import discord
 from discord.ext import commands
 import asyncio
 import botlog as bl
-from config import THREAD_WATCH_CHANNEL_ID, SERVER_ID
 TWITTER_PREFIX = "https://twitter.com/"
 FIXTWITTER_PREFIX = "https://vxtwitter.com/"
 

@@ -202,19 +202,6 @@ async def on_message(msg: discord.Message):
 
 
 @TBotD.event
-async def on_raw_reaction_add(reaction_event: discord.RawReactionActionEvent):
-    if reaction_event.user_id != OWNER_ID:
-        return
-    if str(reaction_event.emoji) == XXX:
-        channel = await TBotD.fetch_channel(reaction_event.channel_id)
-        message = await channel.fetch_message(reaction_event.message_id)
-        try:
-            await message.delete()
-        except discord.Forbidden:
-            bl.error_log.exception(f"Not allowed to delete message: {message.jump_url}")
-
-
-@TBotD.event
 async def on_command_error(ctx: commands.Context, error: commands.CommandError):
     bl.error_log.exception(f"on_command_error : {error} : {ctx.message.content}")
 

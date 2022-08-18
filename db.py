@@ -4,7 +4,6 @@ from discord.ext import tasks, commands
 import timeywimey
 import datetime
 import botlog as bl
-import pytz
 
 from tabulate import tabulate
 import config as pm
@@ -72,35 +71,36 @@ class Database(commands.Cog):
                     await self.add_tbd_used_title(timeywimey.right_now(), to, be, determined)
 
     # CURRENTLY DISABLED
-    @tasks.loop(hours=1)
-    async def loop_send_title_suggestions(self):
-        now = datetime.datetime.now(tz=pytz.timezone('Europe/Berlin'))
-        brit = datetime.datetime(now.year, now.month, now.day, 6, 0, tzinfo=pytz.timezone('Europe/London'))
-        delta = brit - now
-        seconds = delta.total_seconds()
-        if 0 <= seconds <= 3600:
-            await asyncio.sleep(max(seconds, 1))
-            cur = await self.bot.db.cursor()
-            await cur.execute('''SELECT * 
-                    FROM suggestions s
-                    LEFT JOIN used_titles u
-                    ON s.t LIKE u.t
-                        AND s.b LIKE u.b
-                        AND s.d LIKE u.d
-                    WHERE u.t is NULL
-                        OR u.b is NULL
-                        OR u.d is NULL
-                    ORDER BY s.rowid DESC
-                    LIMIT 10''')
-            output = "Guten Morgen, [ADMIN NAME PENDING]. I hope that you're having a pleasant day. " \
-                     "Here is a list of server name suggestions:\n" + \
-                     "\n".join([" ".join(tuple(row)[3:6]) for row in await cur.fetchall()])
-            user = self.bot.get_user(pm.OWNER_ID)
-            await user.send(content=output)
+    # If reenable, make sure to remember to install Pytz or to rewrite
+    # @tasks.loop(hours=1)
+    # async def loop_send_title_suggestions(self):
+        # now = datetime.datetime.now(tz=pytz.timezone('Europe/Berlin'))
+        # brit = datetime.datetime(now.year, now.month, now.day, 6, 0, tzinfo=pytz.timezone('Europe/London'))
+        # delta = brit - now
+        # seconds = delta.total_seconds()
+        # if 0 <= seconds <= 3600:
+            # await asyncio.sleep(max(seconds, 1))
+            # cur = await self.bot.db.cursor()
+            # await cur.execute('''SELECT * 
+                    # FROM suggestions s
+                    # LEFT JOIN used_titles u
+                    # ON s.t LIKE u.t
+                        # AND s.b LIKE u.b
+                        # AND s.d LIKE u.d
+                    # WHERE u.t is NULL
+                        # OR u.b is NULL
+                        # OR u.d is NULL
+                    # ORDER BY s.rowid DESC
+                    # LIMIT 10''')
+            # output = "Guten Morgen, [ADMIN NAME PENDING]. I hope that you're having a pleasant day. " \
+                     # "Here is a list of server name suggestions:\n" + \
+                     # "\n".join([" ".join(tuple(row)[3:6]) for row in await cur.fetchall()])
+            # user = self.bot.get_user(pm.OWNER_ID)
+            # await user.send(content=output)
 
-    @loop_send_title_suggestions.before_loop
-    async def before_loop(self):
-        await self.bot.wait_until_ready()
+    # @loop_send_title_suggestions.before_loop
+    # async def before_loop(self):
+        # await self.bot.wait_until_ready()
 
     @commands.command(hidden=True)
     @pm.is_owner()
