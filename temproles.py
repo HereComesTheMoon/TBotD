@@ -6,7 +6,7 @@ import datetime
 import botlog as bl
 import timeywimey
 
-from config import CW_BAN_ROLE, BLINDED_ROLE, MUTED_ROLE, IDGI, XXX
+from config import CW_BAN_ROLE, BLINDED_ROLE, MUTED_ROLE, IDGI
 
 # add_at / remove_at implement functions which add or remove a role at a given date.
 # Only remove_at is used at the current time
@@ -68,7 +68,9 @@ class RoleManagement(commands.Cog):
         if not parse_status:
             await ctx.reply("Sorry, I was unable to parse this message.")
             return
-        content = f"I parse this as <t:{then}:F>, ie. <t:{then}:R>. This is ``{then}`` in Unix time."
+        content = f"I parse this as <t:{then}:F>, ie. <t:{then}:R>. This is ``{then}`` in Unix time. Relative timestamps: \n"
+        formats = [':t', ':T', ':d', ':D', '', ':F', ':R']
+        content += "".join([f"Type ``<t:{then}{flag}>`` to write <t:{then}{flag}>.\n" for flag in formats])
         await ctx.reply(content=content)
 
     # @config.is_owner()
@@ -183,13 +185,13 @@ class RoleManagement(commands.Cog):
         author = self.TBD.get_member(ctx.author.id)
         if author is None:
             bl.error_log.exception("Tried to fetch a member which does not exist.")
-            await ctx.message.add_reaction(XXX)
+            await ctx.message.add_reaction(IDGI)
             return
 
         role: discord.Role = self.TBD.get_role(role_id)
         if role is None:
             bl.error_log.exception("Tried to fetch a role which does not exist.")
-            await ctx.message.add_reaction(XXX)
+            await ctx.message.add_reaction(IDGI)
             return
 
         if role in author.roles:
@@ -215,7 +217,7 @@ class RoleManagement(commands.Cog):
             await author.add_roles(role, reason="Self-applied via bot command.")
         except discord.HTTPException:
             bl.error_log.exception("Time out error! Unable to add role to user, most likely.")
-            await ctx.message.add_reaction(XXX)
+            await ctx.message.add_reaction(IDGI)
             return
 
         msg = f"You're timed out until <t:{then}>."
@@ -233,7 +235,7 @@ class RoleManagement(commands.Cog):
         to last. """
         author = self.TBD.get_member(ctx.author.id)
         if author is None:
-            await ctx.message.add_reaction(XXX)
+            await ctx.message.add_reaction(IDGI)
             return
         if ',' not in post:
             await ctx.reply("Sorry, I can't parse that. Remember to use a ``,`` in your command. Examples which I "
@@ -259,7 +261,7 @@ class RoleManagement(commands.Cog):
             await ctx.reply(f"You'll be timed out from the <t:{then}> until <t:{until_then + then - now}>.")
         except discord.HTTPException:
             bl.error_log.exception("Time out error! Unable to add role to user, most likely.")
-            await ctx.message.add_reaction(XXX)
+            await ctx.message.add_reaction(IDGI)
         await self.queue_role_changes()
 
     # endregion

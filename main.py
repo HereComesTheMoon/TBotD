@@ -42,13 +42,16 @@ async def on_ready():
     TBotD.db.row_factory = aiosqlite.Row  # Important
     TBotD.went_online_at = timeywimey.right_now()
 
+    tbd = TBotD.get_guild(SERVER_ID)
+    assert tbd is not None
+
     # Cogs:
     # !remindme
-    await TBotD.add_cog(reminders.Reminders(TBotD))
+    # await TBotD.add_cog(reminders.Reminders(TBotD))
     # Store "TBD" title suggestions, and used emoji status (for no real reason)
-    await TBotD.add_cog(db.Database(TBotD))
+    # await TBotD.add_cog(db.Database(TBotD))
     # !cwbanme and related commands
-    await TBotD.add_cog(temproles.RoleManagement(TBotD, TBotD.get_guild(SERVER_ID)))
+    await TBotD.add_cog(temproles.RoleManagement(TBotD, tbd))
     # Post a comment when a new thread is created. TODO: Should be reworked at some point.
     await TBotD.add_cog(threadwatch.ThreadWatch(TBotD))
     # "Fixes" Twitter links. Relies on vxtwitter.
