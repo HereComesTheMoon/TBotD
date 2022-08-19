@@ -53,7 +53,11 @@ async def on_ready():
     # "Fixes" Twitter links. Relies on vxtwitter.
     await TBotD.add_cog(fixtwitter.FixTwitter(TBotD))
     # Calls the mods when a :loudspeaker: react is added
-    await TBotD.add_cog(moderation.Moderation(TBotD))
+    logger_channel = await TBotD.fetch_channel(LOGGER_CHANNEL)
+    if isinstance(logger_channel, discord.TextChannel):
+        await TBotD.add_cog(moderation.Moderation(TBotD, logger_channel))
+    else:
+        bl.error_log.error("logger_channel is not a TextChannel. Unable to load Cog.")
     # Owner tools, to kill the bot and to puppet it
     await TBotD.add_cog(ownertools.OwnerTools(TBotD, connection, tbd, timeywimey.right_now()))
 

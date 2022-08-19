@@ -1,22 +1,32 @@
 import discord
 from discord.ext import commands
-from config import MOD_ROLE, LOGGER_CHANNEL, SERVER_ID, LOUDSPEAKER
+from config import MOD_ROLE, SERVER_ID, LOUDSPEAKER
 
 
 class Moderation(commands.Cog):
-    def __init__(self, bot: commands.Bot):
+    def __init__(self, bot: commands.Bot, logger_channel: discord.TextChannel):
         self.bot = bot
+        self.logger_channel = logger_channel
 
     @commands.Cog.listener()
     async def on_reaction_add(self, react: discord.Reaction, user: discord.User):
-        guild = react.message.channel.guild
-        if guild is None or guild.id != SERVER_ID:
+        if str(react.emoji) != LOUDSPEAKER:
             return
-        if str(react.emoji) == LOUDSPEAKER:
-            channel: discord.TextChannel = await self.bot.fetch_channel(LOGGER_CHANNEL)
-            await react.remove(user)
-            content = f"<@&{MOD_ROLE}> : The mods were called with the {LOUDSPEAKER} emoji by {user.mention} in {react.message.channel.mention}.\nLINK : <{react.message.jump_url}>\n"
-            try:
-                await channel.send(content=content+f"Post by {react.message.author.mention} : \n{react.message.content}")
+
+        channel = react.message.channel
+        if isinstance(channel, discord.DMChannel):
+            content = f"<@&{MOD_ROLE}> : The mods were called with the {LOUDSPEAKER} emoji in private correspondence with the bot. Post:\n\n{react.message.content}"
+        else:
+            # If not in DMs, then only accept if it was a TextChannel on TBD
+            guild = react.message.channel.guild
+            if guild is None or guild.id != SERVER_ID or not isinstance(channel, discord.TextChannel):
+                return
+
+            try: 
+                await react.remove(user)
             except discord.HTTPException:
-                await channel.send(content=content)
+                pass
+
+            content = f"<@&{MOD_ROLE}> : The mods were called with the {LOUDSPEAKER} emoji by {user.mention} in {channel.mention}.\nLINK : <{react.message.jump_url}>\n. Post by {react.message.author.mention}: \n\n{react.message.content}"
+
+        await self.logger_channel.send(content[:1990])
