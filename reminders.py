@@ -37,10 +37,11 @@ If the bot is restarted, ensure it doesn't drop any active reminder tasks. (EDIT
 
 
 class Reminders(commands.Cog):
-    def __init__(self, bot: commands.Bot):
+    def __init__(self, bot: commands.Bot, db: aiosqlite.Connection):
         self.bot = bot
         self.reminder_loop.start()
         self.ping_priv = discord.AllowedMentions(everyone=False, roles=False, replied_user=False)
+        self.db = db
 
     @tasks.loop(hours=1)
     async def reminder_loop(self):
@@ -65,14 +66,14 @@ class Reminders(commands.Cog):
             await asyncio.wait(task_stack)
 
     async def notify(self, p: aiosqlite.Row):
-        cur = await self.bot.db.cursor()
+        cur = await self.db.cursor()
         user = self.bot.get_user(p['userID'])
         delay = p['queryDue'] - int(datetime.datetime.now().timestamp())
         await cur.execute('''UPDATE memories 
                              SET status = "Present" 
                              WHERE oid = (?)''',
                           [p['rowid']])
-        await self.bot.db.commit()
+        await self.db.commit()
 
         await asyncio.sleep(max(delay, 1))
 
@@ -80,12 +81,12 @@ class Reminders(commands.Cog):
             await user.send(content=f"{p['reminder']}.\n\nYou set a reminder on the <t:{p['queryMade']}>. "
                                     f"Link to original query: {p['postUrl']}",
                             allowed_mentions=self.ping_priv)
-            cur = await self.bot.db.cursor()
+            cur = await self.db.cursor()
             await cur.execute('''UPDATE memories 
                                  SET status = "Past" 
                                  WHERE oid = (?)''',
                               [p['rowid']])
-            await self.bot.db.commit()
+            await self.db.commit()
             bl.notification_triggered(tuple(p))
         except discord.HTTPException:
             bl.error_log.exception("Reminder notification error! Not good!")
@@ -95,12 +96,12 @@ class Reminders(commands.Cog):
             await owner.send(content=f"{p['reminder']}.\n\nYou set a reminder on the <t:{p['queryMade']}>."
                                      f"Link to original query: {p['postUrl']}",
                              allowed_mentions=self.ping_priv)
-            cur = await self.bot.db.cursor()
+            cur = await self.db.cursor()
             await cur.execute('''UPDATE memories 
                                  SET status = "Error" 
                                  WHERE oid = (?)''',
                               [p['rowid']])
-            await self.bot.db.commit()
+            await self.db.commit()
 
     @commands.command()
     async def remindme(self, ctx, *, arg: str = ""):
@@ -167,17 +168,17 @@ class Reminders(commands.Cog):
                                             f"in bot time.\n```" + content + '```',
                                     allowed_mentions=self.ping_priv)
 
-    async def read_data(self, query: str, params: iter):
-        cur = await self.bot.db.cursor()
+    async def read_data(self, query: str, params: list):
+        cur = await self.db.cursor()
         await cur.execute('''SELECT oid, * 
                              FROM memories ''' + query, params)
         return await cur.fetchall()
 
     async def add_data(self, p: dict):
-        cur = await self.bot.db.cursor()
+        cur = await self.db.cursor()
         await cur.execute('''INSERT INTO memories 
                              VALUES (?, ?, ?, ?, ?, ?, ?);''',
                           [p['userID'], p['postID'], p['postUrl'], p['reminder'], p['queryMade'], p['queryDue'],
                            p['status']])
-        await self.bot.db.commit()
+        await self.db.commit()
         return cur.lastrowid

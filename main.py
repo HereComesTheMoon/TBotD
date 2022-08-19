@@ -43,7 +43,7 @@ async def on_ready():
 
     # Cogs:
     # !remindme
-    await TBotD.add_cog(reminders.Reminders(TBotD))
+    await TBotD.add_cog(reminders.Reminders(TBotD, connection))
     # Store "TBD" title suggestions, and used emoji status (for no real reason)
     await TBotD.add_cog(db.Database(TBotD, connection))
     # !cwbanme and related commands
@@ -63,7 +63,7 @@ async def on_ready():
 async def roll(ctx, *, dice: str = '1d2'):
     """Example: !roll 2d6"""
     bl.log(roll, ctx)
-    p = re.compile('\dd\d{1,7}', re.IGNORECASE)
+    p = re.compile(r'\dd\d{1,7}', re.IGNORECASE)
     temp = p.match(dice)
     if temp is None:
         await ctx.message.add_reaction(IDGI)
@@ -98,7 +98,7 @@ async def now(ctx):
 
 
 @TBotD.command()
-async def ping(ctx, *, post: str = ""):
+async def ping(ctx, *, _: str = ""):
     """Pong!"""
     bl.log(ping, ctx)
     await ctx.channel.send("Pong!")
@@ -108,54 +108,59 @@ async def ping(ctx, *, post: str = ""):
 async def portal(ctx: commands.Context, *, arg: str = ""):
     """Create a portal to facilitate inter-channel travel. eg. !portal #silly funny doge."""
     bl.log(portal, ctx)
-    if ctx.message.raw_channel_mentions:
-        channel = ctx.guild.get_channel_or_thread(ctx.message.raw_channel_mentions[0])
-        if channel is None:
-            await ctx.message.add_reaction(IDGI)
-            return
 
-        what = arg.split(maxsplit=1)
-        if len(what) == 2:
-            what = what[1]
-        else:
-            what = ""
-        try:
-            # Post target portal
-            embed = discord.Embed(title=f"Portal from #{ctx.channel}",
-                                  color=0xe01b24,
-                                  url=ctx.message.jump_url,
-                                  description=what)
-            embed.set_author(name=ctx.author.name, icon_url=ctx.author.display_avatar.url)
-            embed.set_thumbnail(url=ORANGE_PORTAL)
-            target_msg = await channel.send(content=ctx.message.jump_url, embed=embed)
-
-            # Post origin portal
-            embed = discord.Embed(title=f"Portal to #{channel}",
-                                  color=0xe01b24,
-                                  url=target_msg.jump_url,
-                                  description=what)
-            embed.set_author(name=ctx.author.name, icon_url=ctx.author.display_avatar.url)
-            embed.set_thumbnail(url=BLUE_PORTAL)
-            await ctx.channel.send(content=target_msg.jump_url, embed=embed)
-
-            # Edit target portal to correctly link to origin portal
-            embed = discord.Embed(title=f"Portal from #{ctx.channel}",
-                                  color=0xe01b24,
-                                  url=ctx.message.jump_url,
-                                  description=what)
-            embed.set_author(name=ctx.author.name, icon_url=ctx.author.display_avatar.url)
-            embed.set_thumbnail(url=ORANGE_PORTAL)
-            await target_msg.edit(content=ctx.message.jump_url, embed=embed)
-
-            return True
-        except discord.errors.Forbidden:
-            await ctx.message.add_reaction(DENIED)
-            bl.error_log.exception("Incapable of posting portal in that channel.")
-        except discord.errors.HTTPException:
-            await ctx.message.add_reaction(DENIED)
-            bl.error_log.exception("HTTPException, channel might be None.")
-    else:
+    if ctx.guild is None: 
         await ctx.message.add_reaction(IDGI)
+        return
+
+    if not ctx.message.raw_channel_mentions:
+        await ctx.message.add_reaction(IDGI)
+        return
+
+    channel = ctx.guild.get_channel_or_thread(ctx.message.raw_channel_mentions[0])
+    if not isinstance(channel, discord.TextChannel):
+        await ctx.message.add_reaction(IDGI)
+        return
+
+    what = arg.split(maxsplit=1)
+    if len(what) == 2:
+        what = what[1]
+    else:
+        what = ""
+    try:
+        # Post target portal
+        embed = discord.Embed(title=f"Portal from #{ctx.channel}",
+                              color=0xe01b24,
+                              url=ctx.message.jump_url,
+                              description=what)
+        embed.set_author(name=ctx.author.name, icon_url=ctx.author.display_avatar.url)
+        embed.set_thumbnail(url=ORANGE_PORTAL)
+        target_msg = await channel.send(content=ctx.message.jump_url, embed=embed)
+
+        # Post origin portal
+        embed = discord.Embed(title=f"Portal to #{channel}",
+                              color=0xe01b24,
+                              url=target_msg.jump_url,
+                              description=what)
+        embed.set_author(name=ctx.author.name, icon_url=ctx.author.display_avatar.url)
+        embed.set_thumbnail(url=BLUE_PORTAL)
+        await ctx.channel.send(content=target_msg.jump_url, embed=embed)
+
+        # Edit target portal to correctly link to origin portal
+        embed = discord.Embed(title=f"Portal from #{ctx.channel}",
+                              color=0xe01b24,
+                              url=ctx.message.jump_url,
+                              description=what)
+        embed.set_author(name=ctx.author.name, icon_url=ctx.author.display_avatar.url)
+        embed.set_thumbnail(url=ORANGE_PORTAL)
+        await target_msg.edit(content=ctx.message.jump_url, embed=embed)
+
+    except discord.errors.Forbidden:
+        await ctx.message.add_reaction(DENIED)
+        bl.error_log.exception("Incapable of posting portal in that channel.")
+    except discord.errors.HTTPException:
+        await ctx.message.add_reaction(DENIED)
+        bl.error_log.exception("HTTPException, should not happen.")
 
 
 @TBotD.command(hidden=True)
@@ -169,6 +174,7 @@ async def bottle(ctx: commands.Context):
 async def on_message(msg: discord.Message):
     if msg.author.bot:
         return
+    assert TBotD.user is not None
     if TBotD.user.mentioned_in(msg):
         await msg.add_reaction(random.choice([FLUSHED, WAVE, CONFOUNDED, WOOZY, CATHEARTS, CATPOUT, RAT, PLEADING]))
     await TBotD.process_commands(msg)
