@@ -38,8 +38,6 @@ async def on_ready():
 
     connection.row_factory = aiosqlite.Row
 
-    TBotD.went_online_at = timeywimey.right_now()
-
     tbd = TBotD.get_guild(SERVER_ID)
     assert tbd is not None
 
@@ -57,7 +55,7 @@ async def on_ready():
     # Calls the mods when a :loudspeaker: react is added
     await TBotD.add_cog(moderation.Moderation(TBotD))
     # Owner tools, to kill the bot and to puppet it
-    await TBotD.add_cog(ownertools.OwnerTools(TBotD, connection))
+    await TBotD.add_cog(ownertools.OwnerTools(TBotD, connection, tbd, timeywimey.right_now()))
 
 
 
