@@ -8,7 +8,7 @@ from tabulate import tabulate
 from config import is_owner, OWNER_ID, CATSCREAM, IDGI, BOT_JOINED_AT
 
 
-class OwnerTools(commands.Cog):
+class OwnerTools(commands.Cog, name='Tools'):
     def __init__(self, bot: commands.Bot, db: Connection, tbd: discord.Guild, went_online_at: int):
         self.bot = bot
 

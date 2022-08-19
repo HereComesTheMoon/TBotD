@@ -174,6 +174,20 @@ async def bottle(ctx: commands.Context):
     await ctx.reply("The !bottle command is now called !choose. Use that instead.")
 
 
+@TBotD.command()
+async def when(ctx: commands.Context, *, post: str = ""):
+    """Parse a date!"""
+    bl.log(when, ctx)
+    now, then, parse_status = timeywimey.parse_time(post)
+    if not parse_status:
+        await ctx.reply("Sorry, I was unable to parse this message.")
+        return
+    content = f"I parse this as <t:{then}:F>, ie. <t:{then}:R>. This is ``{then}`` in Unix time. Relative timestamps: \n"
+    formats = [':t', ':T', ':d', ':D', '', ':F', ':R']
+    content += "".join([f"Type ``<t:{then}{flag}>`` to write <t:{then}{flag}>.\n" for flag in formats])
+    await ctx.reply(content=content)
+
+
 @TBotD.event
 async def on_message(msg: discord.Message):
     if msg.author.bot:

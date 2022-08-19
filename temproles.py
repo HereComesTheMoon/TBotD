@@ -13,7 +13,7 @@ from config import CW_BAN_ROLE, BLINDED_ROLE, MUTED_ROLE, IDGI
 
 
 
-class RoleManagement(commands.Cog):
+class RoleManagement(commands.Cog, name='Role Management'):
     def __init__(self, bot: commands.Bot, tbd: discord.Guild, db: aiosqlite.Connection):
         self.bot = bot
         self.loop.start()
@@ -60,19 +60,6 @@ class RoleManagement(commands.Cog):
         bl.log(self.blindmeat, ctx)
         await self.time_out_at(ctx, BLINDED_ROLE, post)
 
-
-    @commands.command()
-    async def when(self, ctx: commands.Context, *, post: str = ""):
-        """Parse a time!"""
-        bl.log(self.when, ctx)
-        now, then, parse_status = timeywimey.parse_time(post)
-        if not parse_status:
-            await ctx.reply("Sorry, I was unable to parse this message.")
-            return
-        content = f"I parse this as <t:{then}:F>, ie. <t:{then}:R>. This is ``{then}`` in Unix time. Relative timestamps: \n"
-        formats = [':t', ':T', ':d', ':D', '', ':F', ':R']
-        content += "".join([f"Type ``<t:{then}{flag}>`` to write <t:{then}{flag}>.\n" for flag in formats])
-        await ctx.reply(content=content)
 
     # @config.is_owner()
     # async def unban(self, ctx: commands.Context, *, user_id: str):
