@@ -23,7 +23,7 @@ class FixTwitter(commands.Cog):
 
         content = ""
         for embed in msg.embeds:
-            if embed.url is None or embed.video is None:
+            if embed.url is None or embed.video.url is None:
                 continue
             if not embed.url.startswith(TWITTER_PREFIX):
                 continue
