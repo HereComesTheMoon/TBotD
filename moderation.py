@@ -13,7 +13,7 @@ class Moderation(commands.Cog):
         if guild is None or guild.id != SERVER_ID:
             return
         if str(react.emoji) == LOUDSPEAKER:
-            channel = await self.bot.fetch_channel(LOGGER_CHANNEL)
+            channel: discord.TextChannel = await self.bot.fetch_channel(LOGGER_CHANNEL)
             await react.remove(user)
             content = f"<@&{MOD_ROLE}> : The mods were called with the {LOUDSPEAKER} emoji by {user.mention} in {react.message.channel.mention}.\nLINK : <{react.message.jump_url}>\n"
             try:

@@ -14,11 +14,12 @@ from config import CW_BAN_ROLE, BLINDED_ROLE, MUTED_ROLE, IDGI
 
 
 class RoleManagement(commands.Cog):
-    def __init__(self, bot: commands.Bot, tbd: discord.Guild):
+    def __init__(self, bot: commands.Bot, tbd: discord.Guild, db: aiosqlite.Connection):
         self.bot = bot
         self.loop.start()
         self.ping_priv = discord.AllowedMentions(everyone=False, roles=False, replied_user=False)
         self.TBD = tbd
+        self.db = db
 
         # self.TBD: discord.Guild = self.bot.get_guild(SERVER_ID) # Afaik this just didn't work? Check again
 
@@ -116,19 +117,20 @@ class RoleManagement(commands.Cog):
     async def remove_role(self, row: aiosqlite.Row):
         """Removes a role based on some stored database query."""
         # TABLE remove_at (user_id INTEGER, role_id INTEGER, due INTEGER, status TEXT)
-        cur = await self.bot.db.cursor()
+        cur = await self.db.cursor()
         member: discord.Member = self.TBD.get_member(row['user_id'])
-        role = self.TBD.get_role(row['role_id'])
+        role: discord.Role = self.TBD.get_role(row['role_id'])
         delay = row['due'] - timeywimey.right_now()
+
         await cur.execute('''UPDATE remove_at
                              SET status = "Present"
                              WHERE oid = (?)''',
                           [row['rowid']])
-        await self.bot.db.commit()
+        await self.db.commit()
 
         await asyncio.sleep(max(delay, 1))
 
-        cur = await self.bot.db.cursor()
+        cur = await self.db.cursor()
         try:
             await member.remove_roles(role, reason="Bot removed.")
         except discord.HTTPException:
@@ -137,31 +139,31 @@ class RoleManagement(commands.Cog):
                                  SET status = "Error"
                                  WHERE oid = (?)''',
                               [row['rowid']])
-            await self.bot.db.commit()
+            await self.db.commit()
             return
         await cur.execute('''UPDATE remove_at
                              SET status = "Past"
                              WHERE oid = (?)''',
                           [row['rowid']])
-        await self.bot.db.commit()
+        await self.db.commit()
 
     async def add_role(self, row: aiosqlite.Row):
         """Adds a role based on some stored database query."""
         # TABLE add_at (user_id INTEGER, role_id INTEGER, due INTEGER, status TEXT)
-        cur = await self.bot.db.cursor()
+        cur = await self.db.cursor()
         member: discord.Member = self.TBD.get_member(row['user_id'])
-        role = self.TBD.get_role(row['role_id'])
+        role: discord.Role = self.TBD.get_role(row['role_id'])
         delay = row['due'] - timeywimey.right_now()
 
         await cur.execute('''UPDATE add_at
                              SET status = "Present"
                              WHERE oid = (?)''',
                           [row['rowid']])
-        await self.bot.db.commit()
+        await self.db.commit()
 
         await asyncio.sleep(max(delay, 1))
 
-        cur = await self.bot.db.cursor()
+        cur = await self.db.cursor()
         try:
             await member.add_roles(role, reason="Bot added.")
         except discord.HTTPException:
@@ -170,14 +172,14 @@ class RoleManagement(commands.Cog):
                                  SET status = "Error"
                                  WHERE oid = (?)''',
                               [row['rowid']])
-            await self.bot.db.commit()
+            await self.db.commit()
             return 0  # Missing permissions
 
         await cur.execute('''UPDATE add_at
                              SET status = "Past"
                              WHERE oid = (?)''',
                           [row['rowid']])
-        await self.bot.db.commit()
+        await self.db.commit()
 
     async def time_out(self, ctx: commands.Context, role_id: int, post: str = ""):
         """Times a user out by parsing command, or (if already timed out) tells them how long the time-out is going
@@ -269,7 +271,7 @@ class RoleManagement(commands.Cog):
     # region HelperFunctions
     async def check_ban_length(self, user_id: int, role_id) -> int:
         # TABLE remove_at (user_id INTEGER, role_id INTEGER, due INTEGER, status TEXT)
-        cur = await self.bot.db.cursor()
+        cur = await self.db.cursor()
         await cur.execute('''SELECT oid, * FROM remove_at
                              WHERE user_id = (?)
                              AND role_id = (?)
@@ -291,26 +293,26 @@ class RoleManagement(commands.Cog):
     async def store_add_at(self, user_id: int, role_id: int, due: int):
         """Adds a row to table which represents a 'ADD ROLE(role_id) TO USER(user_id) AT due EVENT."""
         # TABLE add_at (user_id INTEGER, role_id INTEGER, due INTEGER, status TEXT)
-        cur = await self.bot.db.cursor()
+        cur = await self.db.cursor()
         await cur.execute('''INSERT INTO add_at
                              VALUES (?, ?, ?, ?);''',
                           (user_id, role_id, due, 'Future'))
-        await self.bot.db.commit()
+        await self.db.commit()
         return cur.lastrowid
 
     async def store_remove_at(self, user_id: int, role_id: int, due: int):
         """Adds a row to table which represents a 'REMOVE ROLE(role_id) TO USER(user_id) AT due EVENT."""
         # TABLE remove_at (user_id INTEGER, role_id INTEGER, due INTEGER, status TEXT)
-        cur = await self.bot.db.cursor()
+        cur = await self.db.cursor()
         await cur.execute('''INSERT INTO remove_at
                              VALUES (?, ?, ?, ?);''',
                           (user_id, role_id, due, 'Future'))
-        await self.bot.db.commit()
+        await self.db.commit()
         return cur.lastrowid
 
     async def read_add_at(self):
         # TABLE add_at (user_id INTEGER, role_id INTEGER, due INTEGER, status TEXT)
-        cur = await self.bot.db.cursor()
+        cur = await self.db.cursor()
         await cur.execute('''SELECT oid, *
                              FROM add_at WHERE due <= (?)
                              AND status LIKE "Future"''',
@@ -319,7 +321,7 @@ class RoleManagement(commands.Cog):
 
     async def read_remove_at(self):
         # TABLE remove_at (user_id INTEGER, role_id INTEGER, due INTEGER, status TEXT)
-        cur = await self.bot.db.cursor()
+        cur = await self.db.cursor()
         await cur.execute('''SELECT oid, *
                              FROM remove_at
                              WHERE due <= (?)

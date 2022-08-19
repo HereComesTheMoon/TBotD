@@ -19,7 +19,7 @@ class ThreadWatch(commands.Cog):
             if thread.guild.id != SERVER_ID:
                 return
 
-            tw_channel = await self.bot.fetch_channel(THREAD_WATCH_CHANNEL)
+            tw_channel: discord.TextChannel = await self.bot.fetch_channel(THREAD_WATCH_CHANNEL)
             if tw_channel is None:
                 bl.error_log.exception("Can't find thread-watch channel.")
                 return

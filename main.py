@@ -25,8 +25,6 @@ TBotD = commands.Bot(command_prefix='!',
                      activity=activity,
                      intents=intents,
                      status=discord.Status.online)
-TBotD.db = None
-
 
 # General issues with the code:
 # The way config.ini imports are handled is inconsistent
@@ -36,10 +34,10 @@ async def on_ready():
     print("Ready!")
     print(time.strftime("%b %d %Y %H:%M:%S", time.localtime()))
     # Global bot variables. Careful, might overwrite stuff, can be used everywhere.
-    db: aiosqlite.Connection = await aiosqlite.connect("db.db")
+    connection: aiosqlite.Connection = await aiosqlite.connect("db.db")
 
-    TBotD.db = db
-    TBotD.db.row_factory = aiosqlite.Row  # Important
+    connection.row_factory = aiosqlite.Row
+
     TBotD.went_online_at = timeywimey.right_now()
 
     tbd = TBotD.get_guild(SERVER_ID)
@@ -47,11 +45,11 @@ async def on_ready():
 
     # Cogs:
     # !remindme
-    # await TBotD.add_cog(reminders.Reminders(TBotD))
+    await TBotD.add_cog(reminders.Reminders(TBotD))
     # Store "TBD" title suggestions, and used emoji status (for no real reason)
-    # await TBotD.add_cog(db.Database(TBotD))
+    await TBotD.add_cog(db.Database(TBotD, connection))
     # !cwbanme and related commands
-    await TBotD.add_cog(temproles.RoleManagement(TBotD, tbd))
+    await TBotD.add_cog(temproles.RoleManagement(TBotD, tbd, connection))
     # Post a comment when a new thread is created. TODO: Should be reworked at some point.
     await TBotD.add_cog(threadwatch.ThreadWatch(TBotD))
     # "Fixes" Twitter links. Relies on vxtwitter.
@@ -59,7 +57,7 @@ async def on_ready():
     # Calls the mods when a :loudspeaker: react is added
     await TBotD.add_cog(moderation.Moderation(TBotD))
     # Owner tools, to kill the bot and to puppet it
-    await TBotD.add_cog(ownertools.OwnerTools(TBotD, db))
+    await TBotD.add_cog(ownertools.OwnerTools(TBotD, connection))
 
 
 
@@ -181,7 +179,6 @@ async def on_message(msg: discord.Message):
 @TBotD.event
 async def on_command_error(ctx: commands.Context, error: commands.CommandError):
     bl.error_log.exception(f"on_command_error : {error} : {ctx.message.content}")
-
 
 
 if __name__ == '__main__':

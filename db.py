@@ -1,4 +1,5 @@
 import asyncio
+import aiosqlite
 import discord
 from discord.ext import tasks, commands
 import timeywimey
@@ -17,9 +18,10 @@ import config as pm
 # aiosqlite is an async version of sqlite3
 
 class Database(commands.Cog):
-    def __init__(self, bot: commands.Bot):
+    def __init__(self, bot: commands.Bot, db: aiosqlite.Connection):
         self.bot = bot
         self.ping_priv = discord.AllowedMentions(everyone=False, roles=False, replied_user=False)
+        self.db = db
         # CURRENTLY DISABLED
         # self.loop_send_title_suggestions.start()
 
@@ -80,7 +82,7 @@ class Database(commands.Cog):
         # seconds = delta.total_seconds()
         # if 0 <= seconds <= 3600:
             # await asyncio.sleep(max(seconds, 1))
-            # cur = await self.bot.db.cursor()
+            # cur = await self.db.cursor()
             # await cur.execute('''SELECT * 
                     # FROM suggestions s
                     # LEFT JOIN used_titles u
@@ -102,133 +104,25 @@ class Database(commands.Cog):
     # async def before_loop(self):
         # await self.bot.wait_until_ready()
 
-    @commands.command(hidden=True)
-    @pm.is_owner()
-    async def least_used_emojis(self, ctx: commands.Context, *, post: str = ""):
-        emojis = tuple([emoji.id for emoji in self.bot.get_guild(pm.SERVER_ID).emojis])
-        cur = await self.bot.db.cursor()
-        await cur.execute(f'''SELECT name, emoji_id, uses FROM emojis_custom
-                              WHERE emoji_id IN({','.join(['?'] * len(emojis))})
-                              ORDER BY uses ASC''', emojis)
-        answer = "Here's a table of least-used emojis:"
-
-        result = [(name, emoji_id, uses) for name, emoji_id, uses in await cur.fetchall()]
-        used_check = {x[1] for x in result}
-        not_used = [(emoji.name, emoji.id, 0) for emoji in self.bot.get_guild(pm.SERVER_ID).emojis if
-                    emoji.id not in used_check]
-
-        least_used = [(uses, f"<:{name}:{emoji_id}>") for name, emoji_id, uses in not_used + result]
-        last = least_used[0][0] - 1
-        for uses, name in least_used:
-            if len(answer) + len(name) < 1900:
-                if last != uses:
-                    answer += f"\n{uses} : {name}"
-                    last = uses
-                else:
-                    answer += f", {name}"
-            else:
-                break
-        await ctx.reply(answer)
-
-    @commands.command(hidden=True)
-    @pm.is_owner()
-    async def printdbs(self, ctx: commands.Context):
-        bl.log(self.printdbs, ctx)
-        cur = await self.bot.db.cursor()
-        await cur.execute('''SELECT * from sqlite_master''')
-        tabs = tabulate([tuple(x) for x in await cur.fetchall()])
-        await ctx.reply(content="```" + tabs + "```")
-
-    @commands.command(hidden=True)
-    @pm.is_owner()
-    async def printdb(self, ctx: commands.Context, *, post: str = ""):
-        # TODO: This is horrible, and prone to wrecking your stuff if you accidentally SQL inject yourself. Change!
-        bl.log(self.printdb, ctx)
-        cur = await self.bot.db.cursor()
-        await cur.execute('''SELECT name FROM sqlite_master
-                             WHERE type ='table'
-                             AND name NOT LIKE 'sqlite_%';''')
-        table_names = [tuple(x)[0] for x in await cur.fetchall()]
-        if post not in table_names:
-            await ctx.message.add_reaction(pm.IDGI)
-            return
-        try:
-            await cur.execute('''SELECT * FROM ''' + post + ''' ''' + '''LIMIT 5''')
-            tabs = tabulate([tuple(x) for x in await cur.fetchall()])
-        except:
-            bl.error_log.exception("Oh god oh no this can't be happening sql injection or worse.")
-            await ctx.reply(content="I warned you about SQL injection. Why didn't you listen?")
-            return
-        await ctx.reply(content=post + "\n```" + tabs + "```")
-
-    @commands.command()
-    async def stats(self, ctx: commands.Context):
-        """Display statistics of the server!"""
-        bl.log(self.stats, ctx)
-        data = []
-
-        data.append(f"I joined the server <t:{int(pm.BOT_JOINED_AT)}:R>, and the last time I was restarted was <t:{self.bot.went_online_at}:R>.")
-
-        cur = await self.bot.db.cursor()
-        await cur.execute('''SELECT COUNT(*) AS count FROM suggestions''')
-        # Fetches the first (and in this case only row), and accesses its key.
-        # RowFactory setting allows this.
-        result = (await cur.fetchone())['count']
-        data.append(f"I have counted {result} server-name suggestions!")
-
-        cur = await self.bot.db.cursor()
-        await cur.execute('''SELECT COUNT(*) AS count FROM used_titles''')
-        result = (await cur.fetchone())['count']
-        data.append(f"I have counted {result} different server names!")
-
-        cur = await self.bot.db.cursor()
-        await cur.execute('''SELECT COUNT(*) AS count FROM memories
-                             WHERE status != "Past"''')
-        result = (await cur.fetchone())['count']
-        data.append(f"There are {result} reminders waiting to be triggered!")
-
-        cur = await self.bot.db.cursor()
-        await cur.execute('''SELECT SUM(uses) AS count FROM emojis_default''')
-        result = (await cur.fetchone())['count']
-        data.append(f"I have counted a total of {result} reactions with default emojis!")
-
-        cur = await self.bot.db.cursor()
-        await cur.execute('''SELECT SUM(uses) AS count FROM emojis_custom''')
-        result = (await cur.fetchone())['count']
-        data.append(f"I have counted a total of {result} reactions with custom emojis!")
-
-        cur = await self.bot.db.cursor()
-        emojis = tuple([emoji.id for emoji in self.bot.get_guild(pm.SERVER_ID).emojis])
-        await cur.execute(f'''SELECT * FROM emojis_custom 
-                              WHERE emoji_id IN({','.join(['?'] * len(emojis))})
-                              ORDER BY RANDOM() 
-                              LIMIT 3''', emojis)
-        result = await cur.fetchall()
-        for row in result:
-            data.append(f"<:{row['name']}:{row['emoji_id']}> has been used {row['uses']} times!")
-
-        poast = "Loading statistics... \n" + "\n".join(data)
-        await ctx.reply(content=poast)
-
     async def add_tbd_suggestion(self, date: int, user_id: int, post_id: int, to: str, be: str, determined: str):
         # TABLE suggestions (date INT, userID INT, postID INT, t TEXT, b TEXT, d TEXT)
-        cur = await self.bot.db.cursor()
+        cur = await self.db.cursor()
         await cur.execute('''INSERT INTO suggestions 
                              VALUES (?,?,?,?,?,?)''',
                           [date, user_id, post_id, to, be, determined])
-        await self.bot.db.commit()
+        await self.db.commit()
 
     async def add_tbd_used_title(self, date: int, to: str, be: str, determined: str):
         # TABLE used_title (date INT, t TEXT, b TEXT, d TEXT)
-        cur = await self.bot.db.cursor()
+        cur = await self.db.cursor()
         await cur.execute('''INSERT INTO used_titles 
                              VALUES (?,?,?,?)''',
                           [date, to, be, determined])
-        await self.bot.db.commit()
+        await self.db.commit()
 
     async def emoji_reacted(self, emoji: discord.PartialEmoji):
         # TABLE emojis_default (name TEXT, uses INT)
-        cur = await self.bot.db.cursor()
+        cur = await self.db.cursor()
         await cur.execute('''SELECT * 
                              FROM emojis_default 
                              WHERE name = (?)''',
@@ -243,11 +137,11 @@ class Database(commands.Cog):
                                  SET uses = uses + 1 
                                  WHERE name = (?)''',
                               [emoji.name])
-        await self.bot.db.commit()
+        await self.db.commit()
 
     async def emoji_react_removed(self, emoji: discord.PartialEmoji):
         # TABLE emojis_default (name TEXT, uses INT)
-        cur = await self.bot.db.cursor()
+        cur = await self.db.cursor()
         await cur.execute('''SELECT * 
                              FROM emojis_default 
                              WHERE name = (?)''',
@@ -260,11 +154,11 @@ class Database(commands.Cog):
                                  SET uses = uses - 1 
                                  WHERE name = (?)''',
                               [emoji.name])
-        await self.bot.db.commit()
+        await self.db.commit()
 
     async def custom_emoji_reacted(self, emoji: discord.PartialEmoji):
         # TABLE emojis_reacts (emoji_id INTEGER, name TEXT, url TEXT, uses INT)
-        cur = await self.bot.db.cursor()
+        cur = await self.db.cursor()
         emoji_id = emoji.id
         await cur.execute('''SELECT * 
                              FROM emojis_custom 
@@ -280,11 +174,11 @@ class Database(commands.Cog):
                                  SET uses = uses + 1 
                                  WHERE emoji_id = (?)''',
                               [emoji_id])
-        await self.bot.db.commit()
+        await self.db.commit()
 
     async def custom_emoji_react_removed(self, emoji: discord.PartialEmoji):
         # TABLE emojis_reacts (emoji_id INTEGER, name TEXT, url TEXT, uses INT)
-        cur = await self.bot.db.cursor()
+        cur = await self.db.cursor()
         emoji_id = emoji.id
         await cur.execute('''SELECT * 
                              FROM emojis_custom 
@@ -298,4 +192,4 @@ class Database(commands.Cog):
                                  SET uses = uses - 1 
                                  WHERE emoji_id = (?)''',
                               [emoji_id])
-        await self.bot.db.commit()
+        await self.db.commit()
