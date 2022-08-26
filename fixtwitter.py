@@ -16,10 +16,15 @@ class FixTwitter(commands.Cog):
         if msg.author.bot:
             return
 
-        await asyncio.sleep(2) # To prevent the race-condition where Discord didn't load the embed yet
+        # XXX : If there ever are twitter links which start differently, this may fail
+        if TWITTER_PREFIX not in msg.clean_content:
+            return
 
-        if not msg.embeds: # Just in case
-            await asyncio.sleep(2)
+        # To prevent the race-condition where Discord didn't load the embed yet
+        for _ in range(100):
+            if msg.embeds:
+                break
+            await asyncio.sleep(0.1)
 
         content = ""
         for embed in msg.embeds:
@@ -30,16 +35,22 @@ class FixTwitter(commands.Cog):
 
             content += FIXTWITTER_PREFIX + embed.url[len(TWITTER_PREFIX):] + " "
 
-        if content:
+        if content == "":
+            return
+
+        try:
             new_post = await msg.reply(content, mention_author=False)
             self.stored_posts[msg.id] = new_post
-            try:
-                await msg.edit(suppress=True)
-            except discord.errors.Forbidden:
-                pass
+        except discord.HTTPException:
+            return # If we cannot post a fixed link, return, since we do not want to suppress embeds on the post
 
-            await asyncio.sleep(7200) # Two hours time during which deletion of msg results in deletion of response
-            self.stored_posts.pop(msg.id, None)
+        try:
+            await msg.edit(suppress=True)
+        except discord.errors.Forbidden:
+            pass # For example, forbidden from removing embeds in a post that happened in DMs
+
+        await asyncio.sleep(7200) # Two hours time during which deletion of msg results in deletion of response
+        self.stored_posts.pop(msg.id, None)
 
 
 
