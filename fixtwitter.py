@@ -16,8 +16,7 @@ class FixTwitter(commands.Cog):
         if msg.author.bot:
             return
 
-        # XXX : If there ever are twitter links which start differently, this may fail
-        if TWITTER_PREFIX not in msg.clean_content:
+        if "twitter.com" not in msg.clean_content:
             return
 
         # To prevent the race-condition where Discord didn't load the embed yet
@@ -30,10 +29,9 @@ class FixTwitter(commands.Cog):
         for embed in msg.embeds:
             if embed.url is None or embed.video.url is None:
                 continue
-            if not embed.url.startswith(TWITTER_PREFIX):
-                continue
-
-            content += FIXTWITTER_PREFIX + embed.url[len(TWITTER_PREFIX):] + " "
+            i = embed.url.find("twitter.com/")
+            if i != -1:
+                content += FIXTWITTER_PREFIX + embed.url[i + len("twitter.com/"):] + " "
 
         if content == "":
             return
