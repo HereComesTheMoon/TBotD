@@ -1,11 +1,12 @@
+import discord
 from discord.ext import commands
 
 import fixtwitter
 import moderation
 import threadwatch
 import ownertools
-from config import *
-
+from config import SERVER_ID, LOGGER_CHANNEL, IDGI, ORANGE_PORTAL, BLUE_PORTAL, DENIED, KEY
+from config import FLUSHED, WAVE, CONFOUNDED, WOOZY, CATHEARTS, CATPOUT, RAT, PLEADING
 import random
 import re
 import time
