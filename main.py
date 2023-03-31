@@ -5,6 +5,7 @@ import fixtwitter
 import moderation
 import threadwatch
 import ownertools
+import yud
 from config import SERVER_ID, LOGGER_CHANNEL, IDGI, ORANGE_PORTAL, BLUE_PORTAL, DENIED, KEY
 from config import FLUSHED, WAVE, CONFOUNDED, WOOZY, CATHEARTS, CATPOUT, RAT, PLEADING
 import random
@@ -53,6 +54,8 @@ async def on_ready():
     await TBotD.add_cog(threadwatch.ThreadWatch(TBotD))
     # "Fixes" Twitter links. Relies on vxtwitter.
     await TBotD.add_cog(fixtwitter.FixTwitter(TBotD))
+    # Posts Yud 
+    await TBotD.add_cog(yud.Yud(TBotD))
     # Calls the mods when a :loudspeaker: react is added
     logger_channel = await TBotD.fetch_channel(LOGGER_CHANNEL)
     if isinstance(logger_channel, discord.TextChannel):
