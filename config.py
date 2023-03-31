@@ -20,6 +20,7 @@ SERVER_ID = int(config[MODE]['SERVER'])
 
 THREAD_WATCH_CHANNEL = int(config[MODE]['THREAD_WATCH_CHANNEL'])
 LOGGER_CHANNEL = int(config[MODE]['LOGGER_CHANNEL'])
+BOT_CHANNEL = int(config[MODE]['BOT_CHANNEL'])
 
 CW_BAN_ROLE = int(config[MODE]['CW_BAN_ROLE'])
 BLINDED_ROLE = int(config[MODE]['BLINDED_ROLE'])
@@ -70,6 +71,15 @@ def on_tbd(msg: discord.Message) -> bool:
         return msg.guild.id == SERVER_ID
     return False
 
+def in_bot_channel(msg: discord.Message) -> bool:
+    guild = msg.guild
+    if guild: # breaks if on not-TBD server, like everything else
+        return msg.channel.id == BOT_CHANNEL
+    return False
+
+def in_dms(msg: discord.Message) -> bool:
+    return isinstance(msg.channel, discord.channel.DMChannel)
+        
 
 def initialise_databases():
     with sqlite3.connect('db.db') as con:
@@ -95,6 +105,12 @@ def initialise_databases():
         cur.execute('''CREATE TABLE 
                        IF NOT EXISTS 
                        used_titles (date INT, t TEXT, b TEXT, d TEXT)''')
+        cur.execute('''CREATE TABLE
+                       IF NOT EXISTS
+                       yud_called (date INT, userID INT)''')
+        cur.execute('''CREATE TABLE
+                       IF NOT EXISTS
+                       yud_reminder (date_due INT, userID INT)''')
     con.close()
 
 
