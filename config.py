@@ -107,10 +107,7 @@ def initialise_databases():
                        used_titles (date INT, t TEXT, b TEXT, d TEXT)''')
         cur.execute('''CREATE TABLE
                        IF NOT EXISTS
-                       yud_called (date INT, userID INT)''')
-        cur.execute('''CREATE TABLE
-                       IF NOT EXISTS
-                       yud_reminder (date_due INT, userID INT)''')
+                       yuds (date INT, userID INT, postID INT, height INT, width INT)''')
     con.close()
 
 

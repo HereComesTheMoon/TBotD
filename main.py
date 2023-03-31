@@ -55,7 +55,7 @@ async def on_ready():
     # "Fixes" Twitter links. Relies on vxtwitter.
     await TBotD.add_cog(fixtwitter.FixTwitter(TBotD))
     # Posts Yud 
-    await TBotD.add_cog(yud.Yud(TBotD))
+    await TBotD.add_cog(yud.Yud(TBotD, connection))
     # Calls the mods when a :loudspeaker: react is added
     logger_channel = await TBotD.fetch_channel(LOGGER_CHANNEL)
     if isinstance(logger_channel, discord.TextChannel):

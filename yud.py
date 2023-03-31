@@ -12,12 +12,13 @@ from collections import defaultdict
 
 
 class Yud(commands.Cog):
-    def __init__(self, bot: commands.Bot):
+    def __init__(self, bot: commands.Bot, db):
         self.bot = bot
         self.ping_priv = discord.AllowedMentions(everyone=False, users=False, roles=False, replied_user=False)
         self.yud_loop.start()
         self.yudim = Image.open('./yud.jpeg')
         self.yudminders: dict[int, list[int]] = defaultdict(set)
+        self.db = db
 
     @commands.Cog.listener()
     async def on_message(self, msg: discord.Message):
@@ -30,8 +31,25 @@ class Yud(commands.Cog):
 
         today = dt.datetime.now().astimezone(ZoneInfo('EST')).date()
         if 'yud' in msg.content.lower() or (today.month == 4 and today.day == 1) or rng == 1:
-            yud = await self.get_yud()
-            await msg.channel.send(file=yud)
+            yud = self.yudim.resize((round(self.yudim.size[0] * random.uniform(0.001, 5)),
+            round(self.yudim.size[1] * random.uniform(0.001, 1.5))))
+            temp = BytesIO()
+            yud.save(temp, format='jpeg')
+            temp.seek(0)
+            file = discord.File(temp, filename='yud.jpeg')
+            await msg.reply(allowed_mentions=self.ping_priv, file=file)
+            cur = await self.db.cursor()
+# yuds (date INT, userID INT, postID INT, height INT, width INT)
+            await cur.execute('''INSERT INTO yuds 
+                                 VALUES (?, ?, ?, ?, ?);''',
+                              [
+                    int(dt.datetime.now().timestamp()),
+                    msg.author.id,
+                    msg.id,
+                    yud.size[0],
+                    yud.size[1]
+            ])
+            await self.db.commit()
 
 
     @commands.command(hidden=True)
@@ -47,6 +65,7 @@ class Yud(commands.Cog):
         await ctx.reply("\n".join(s))
             
     
+    @commands.command()
     async def yud(self, ctx: commands.Context, *, post: str = ""):
         """yud"""
         bl.log(self.yud, ctx)
