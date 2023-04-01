@@ -93,11 +93,15 @@ class Yud(commands.Cog):
 
     async def queue_yudminder(self, userID:int):
         d = dt.timedelta(days=7)
+        today = dt.datetime.now().astimezone(ZoneInfo('EST')).date()
+        if today.month == 4 and today.day == 1:
+            d = dt.timedelta(minutes=7)
         scale = random.lognormvariate(0, 1.5)
         d *= scale
         due = dt.datetime.now() + d
         due = int(due.timestamp())
         self.yudminders[userID].add(due)
+        await self.queue_yuds()
 
 
     @tasks.loop(hours=1)
