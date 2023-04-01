@@ -74,13 +74,13 @@ class Yud(commands.Cog):
             await ctx.reply(allowed_mentions=self.ping_priv, file=yud)
             return
         if self.yudminders[ctx.author.id]:
-            await self.queue_yudminder(ctx.author.id)
             await ctx.message.add_reaction(CATPOUT)
+            await self.queue_yudminder(ctx.author.id)
             return
 
-        await self.queue_yudminder(ctx.author.id)
         yud = await self.get_yud()
         await ctx.reply(allowed_mentions=self.ping_priv, file=yud)
+        await self.queue_yudminder(ctx.author.id)
 
 
     async def get_yud(self, x: float=5, y: float=1.5) -> discord.File:
@@ -114,9 +114,13 @@ class Yud(commands.Cog):
         yudminders = []
         now = int(dt.datetime.now().timestamp())
         for userID, yuds_due in self.yudminders.items():
+            delet = set()
             for due in yuds_due:
                 if due <= now + 3600 + 60:
                     yudminders.append((userID, due))
+                    delet.add(due)
+            for due in delet:
+                yuds_due.discard(due)
         task_stack = [asyncio.create_task(self.yudify(userID, due)) for userID, due in yudminders]
         if task_stack:
             await asyncio.wait(task_stack)
@@ -125,9 +129,12 @@ class Yud(commands.Cog):
         yudminders = []
         now = int(dt.datetime.now().timestamp())
         for userID, yuds_due in self.yudminders.items():
+            delet = set()
             for due in yuds_due:
                 if due <= now + 3600 + 60:
                     yudminders.append((userID, due))
+            for due in delet:
+                yuds_due.discard(due)
         task_stack = [asyncio.create_task(self.yudify(userID, due)) for userID, due in yudminders]
         if task_stack:
             await asyncio.wait(task_stack)
