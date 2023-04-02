@@ -57,12 +57,12 @@ class Yud(commands.Cog):
         cur = await self.db.cursor()
         await cur.execute('''SELECT date, userID, postID, height, width FROM yuds''')
         # answer = "Here's a table of least-used emojis:"
-        table_data = list(tuple(date, userID, postID, height, width, height * width) for date, userID, postID, height, width in await cur.fetchall())
+        table_data = list((date, userID, postID, height, width, height * width) for date, userID, postID, height, width in await cur.fetchall())
         table_data.sort(key=lambda row: row[-1])
-        s = [f"Board of sporadic Yuds. Thus far discovered {len(table_data)}. Ordered by total magnitude:"]
-        for k, (date, userID, _, height, width, size) in enumerate(table_data[:5]):
+        s = [f"Board of sporadic Yuds. Thus far discovered: {len(table_data)}. Ordered by total magnitude:"]
+        for k, (date, userID, _, height, width, size) in enumerate(table_data[:5], 1):
             date = f"<t:{date}:D>"
-            user = await self.bot.get_user(userID).name
+            user = self.bot.get_user(userID).name
             s.append(f"{k} :: Discovered by {user} on {date}. Height: {height}. Girth: {width}. Total magnitude: {size}")
         res = "\n\n".join(s)
         await ctx.reply(res)
