@@ -5,7 +5,7 @@ import botlog as bl
 from PIL import Image
 import datetime as dt
 from zoneinfo import ZoneInfo
-from config import is_owner, in_dms, in_bot_channel, CATPOUT
+from config import is_owner, in_dms, CATPOUT
 import random
 import asyncio
 from collections import defaultdict
@@ -92,10 +92,13 @@ class Yud(commands.Cog):
         return discord.File(temp, filename='yud.jpeg')
 
     async def queue_yudminder(self, userID:int):
-        d = dt.timedelta(days=7)
+        d = dt.timedelta(days=7/3)
         today = dt.datetime.now().astimezone(ZoneInfo('EST')).date()
         if today.month == 4 and today.day == 1:
             d = dt.timedelta(minutes=7)
+        # Mean lognorm(mu, sigma) = exp(mu + (sigma**2)/2)
+        # mu = 0, sigma = 1.5 => Mean ~= 3
+        # timedelta of 7/3 days => approximately one week until yud refresh
         scale = random.lognormvariate(0, 1.5)
         d *= scale
         due = dt.datetime.now() + d
@@ -104,26 +107,9 @@ class Yud(commands.Cog):
         await self.queue_yuds()
 
 
-    @tasks.loop(hours=1)
+    @tasks.loop(minutes=5)
     async def yud_loop(self):
         await self.queue_yuds()
-
-    @yud_loop.before_loop
-    async def before_yud_loop(self):
-        await self.bot.wait_until_ready()
-        yudminders = []
-        now = int(dt.datetime.now().timestamp())
-        for userID, yuds_due in self.yudminders.items():
-            delet = set()
-            for due in yuds_due:
-                if due <= now + 3600 + 60:
-                    yudminders.append((userID, due))
-                    delet.add(due)
-            for due in delet:
-                yuds_due.discard(due)
-        task_stack = [asyncio.create_task(self.yudify(userID, due)) for userID, due in yudminders]
-        if task_stack:
-            await asyncio.wait(task_stack)
 
     async def queue_yuds(self):
         yudminders = []
@@ -131,7 +117,7 @@ class Yud(commands.Cog):
         for userID, yuds_due in self.yudminders.items():
             delet = set()
             for due in yuds_due:
-                if due <= now + 3600 + 60:
+                if due <= now + 300:
                     yudminders.append((userID, due))
             for due in delet:
                 yuds_due.discard(due)
@@ -146,6 +132,5 @@ class Yud(commands.Cog):
         try:
             yud = await self.get_yud()
             await user.send(file=yud)
-            self.yudminders[userID].discard(due)
         except discord.HHTTPException:
             bl.error_log.exception(f"Dropped a Yud for {user}, irrelevant.")
