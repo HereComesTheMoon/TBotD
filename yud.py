@@ -69,7 +69,7 @@ class Yud(commands.Cog):
     async def yud(self, ctx: commands.Context, *, post: str = ""):
         """yud"""
         bl.log(self.yud, ctx)
-        if in_dms(ctx) or in_bot_channel(ctx):
+        if in_dms(ctx):
             yud = await self.get_yud()
             await ctx.reply(allowed_mentions=self.ping_priv, file=yud)
             return
