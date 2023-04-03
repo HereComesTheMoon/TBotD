@@ -56,7 +56,6 @@ class Yud(commands.Cog):
     async def yudboard(self, ctx: commands.Context):
         cur = await self.db.cursor()
         await cur.execute('''SELECT date, userID, postID, height, width FROM yuds''')
-        # answer = "Here's a table of least-used emojis:"
         table_data = list((date, userID, postID, height, width, height * width) for date, userID, postID, height, width in await cur.fetchall())
         table_data.sort(key=lambda row: row[-1])
         s = [f"Board of sporadic Yuds. Thus far discovered: {len(table_data)}. Ordered by total magnitude:"]
@@ -135,6 +134,7 @@ class Yud(commands.Cog):
             for due in yuds_due:
                 if due <= now + 300:
                     yudminders.append((userID, due))
+                    delet.add(due)
             for due in delet:
                 yuds_due.discard(due)
         task_stack = [asyncio.create_task(self.yudify(userID, due)) for userID, due in yudminders]
@@ -148,5 +148,7 @@ class Yud(commands.Cog):
         try:
             yud = await self.get_yud()
             await user.send(file=yud)
+        except discord.errors.Forbidden:
+            bl.error_log.exception(f"{user} probably has the bot blocked. Sad!")
         except discord.HHTTPException:
             bl.error_log.exception(f"Dropped a Yud for {user}, irrelevant.")
