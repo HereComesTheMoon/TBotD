@@ -112,7 +112,7 @@ async def ping(ctx, *, _: str = ""):
     await ctx.channel.send("Pong!")
 
 
-@TBotD.command()
+@TBotD.command(aliases=['teleport'])
 async def portal(ctx: commands.Context, *, arg: str = ""):
     """Create a portal to facilitate inter-channel travel. eg. !portal #silly funny doge."""
     bl.log(portal, ctx)
