@@ -191,10 +191,10 @@ class YudImage:
             self.width = size[0]
             self.height = size[0]
 
-        if quality is not None and 0 <= quality <= 100:
-            self.quality = quality
+        if quality is not None and 1 <= quality <= 100:
+            self.quality = int(quality)
         else:
-            self.quality = random.uniform(0, 75)
+            self.quality = int(random.uniform(1, 75))
 
 
     async def get_discord_file(self):
