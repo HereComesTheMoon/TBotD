@@ -1,14 +1,15 @@
+from typing import Optional, Tuple
 import discord
+from timeywimey import right_now
 from discord.ext import commands, tasks
 from io import BytesIO
 import botlog as bl
 from PIL import Image
 import datetime as dt
 from zoneinfo import ZoneInfo
-from config import is_owner, in_dms, CATPOUT
+from config import is_owner, in_dms, CATPOUT, CATSCREAM
 import random
 import asyncio
-from collections import defaultdict
 
 
 class Yud(commands.Cog):
@@ -16,8 +17,6 @@ class Yud(commands.Cog):
         self.bot = bot
         self.ping_priv = discord.AllowedMentions(everyone=False, users=False, roles=False, replied_user=False)
         self.yud_loop.start()
-        self.yudim = Image.open('./yud.jpeg')
-        self.yudminders: dict[int, list[int]] = defaultdict(set)
         self.db = db
 
     @commands.Cog.listener()
@@ -31,34 +30,31 @@ class Yud(commands.Cog):
 
         today = dt.datetime.now().astimezone(ZoneInfo('EST')).date()
         if 'yud' in msg.content.lower() or (today.month == 4 and today.day == 1) or rng == 1:
-            yud = self.yudim.resize((round(self.yudim.size[0] * random.uniform(0.001, 5)),
-            round(self.yudim.size[1] * random.uniform(0.001, 1.5))))
-            temp = BytesIO()
-            yud.save(temp, format='jpeg')
-            temp.seek(0)
-            file = discord.File(temp, filename='yud.jpeg')
-            await msg.reply(allowed_mentions=self.ping_priv, file=file)
+            yud = YudImage()
+            await msg.reply(allowed_mentions=self.ping_priv, file=await yud.get_discord_file())
             cur = await self.db.cursor()
-# yuds (date INT, userID INT, postID INT, height INT, width INT)
+# yuds (date INT, userID INT, postID INT, width INT, height INT, quality INT)
             await cur.execute('''INSERT INTO yuds 
-                                 VALUES (?, ?, ?, ?, ?);''',
+                                 VALUES (?, ?, ?, ?, ?, ?);''',
                               [
                     int(dt.datetime.now().timestamp()),
                     msg.author.id,
                     msg.id,
-                    yud.size[0],
-                    yud.size[1]
+                    yud.width,
+                    yud.height,
+                    yud.quality,
             ])
             await self.db.commit()
 
 
-    @commands.command()
+    @commands.command(hidden=True)
+    @is_owner()
     async def yudboard(self, ctx: commands.Context):
         cur = await self.db.cursor()
         await cur.execute('''SELECT date, userID, postID, height, width FROM yuds''')
         table_data = list((date, userID, postID, height, width, height * width) for date, userID, postID, height, width in await cur.fetchall())
         table_data.sort(key=lambda row: row[-1])
-        s = [f"Board of sporadic Yuds. Thus far discovered: {len(table_data)}. Ordered by total magnitude:"]
+        s = [f"Board of rare Yuds. Thus far discovered: {len(table_data)}. Ordered by total magnitude:"]
         for k, (date, userID, _, height, width, size) in enumerate(table_data[:5], 1):
             date = f"<t:{date}:D>"
             user = self.bot.get_user(userID).name
@@ -78,33 +74,74 @@ class Yud(commands.Cog):
             nxt = sorted(yudminders).pop(0)
             s.append(f"{user} : {len(yudminders)=} : <t:{nxt}:R>")
         await ctx.reply("\n".join(s))
-            
-    
+
+    @tasks.loop(minutes=5)
+    async def yud_loop(self):
+        await self.queue_yudminders()
+
+    async def queue_yudminders(self):
+        now = right_now()
+        cur = await self.db.cursor()
+        await cur.execute('''
+            SELECT oid, * 
+            FROM yudminders 
+            WHERE (?) <= due
+            AND due <= (?)
+            ORDER BY due ASC
+            ''', [now, now + 300])
+        yudminders = await cur.fetchall()
+
+        await cur.execute('''
+            DELETE
+            FROM yudminders
+            WHERE (?) <= due
+            AND due <= (?);
+            ''', [now, now + 300])
+        await self.db.commit()
+
+        task_stack = [asyncio.create_task(self.send_yudminder(row['userID'], row['due'])) for row in yudminders]
+        if task_stack:
+            await asyncio.wait(task_stack)
+
+
+    async def send_yudminder(self, userID: int, due: int):
+        user = self.bot.get_user(userID)
+        if user is None:
+            bl.error_log.exception(f"Yudminders could not find user with id {userID}, weird!")
+            return
+        delay = due - right_now()
+        await asyncio.sleep(max(delay, 1))
+        try:
+            yud = await YudImage().get_discord_file()
+            await user.send(file=yud)
+        except discord.errors.Forbidden:
+            bl.error_log.exception(f"{user} probably has the bot blocked. Sad!")
+        except discord.HHTTPException:
+            bl.error_log.exception(f"Dropped a Yud for {user}, irrelevant.")
+
+
+
     @commands.command()
     async def yud(self, ctx: commands.Context, *, post: str = ""):
         """yud"""
         bl.log(self.yud, ctx)
         if in_dms(ctx):
-            yud = await self.get_yud()
+            yud = await YudImage().get_discord_file()
             await ctx.reply(allowed_mentions=self.ping_priv, file=yud)
             return
-        if self.yudminders[ctx.author.id]:
+
+        yudminders = await self.get_yudminders_for(ctx.author.id)
+
+        if 5 <= len(yudminders):
+            await ctx.message.add_reaction(CATSCREAM)
+        elif yudminders:
             await ctx.message.add_reaction(CATPOUT)
             await self.queue_yudminder(ctx.author.id)
-            return
+        else:
+            yud = await YudImage().get_discord_file()
+            await ctx.reply(allowed_mentions=self.ping_priv, file=yud)
+            await self.queue_yudminder(ctx.author.id)
 
-        yud = await self.get_yud()
-        await ctx.reply(allowed_mentions=self.ping_priv, file=yud)
-        await self.queue_yudminder(ctx.author.id)
-
-
-    async def get_yud(self, x: float=5, y: float=1.5) -> discord.File:
-        yud = self.yudim.resize((round(self.yudim.size[0] * random.uniform(0.001, x)),
-        round(self.yudim.size[1] * random.uniform(0.001, y))))
-        temp = BytesIO()
-        yud.save(temp, format='jpeg')
-        temp.seek(0)
-        return discord.File(temp, filename='yud.jpeg')
 
     async def queue_yudminder(self, userID:int):
         d = dt.timedelta(days=7/3)
@@ -118,37 +155,57 @@ class Yud(commands.Cog):
         d *= scale
         due = dt.datetime.now() + d
         due = int(due.timestamp())
-        self.yudminders[userID].add(due)
-        await self.queue_yuds()
+
+        cur = await self.db.cursor()
+        await cur.execute(
+            '''
+                INSERT INTO yudminders
+                VALUES (?, ?);
+            ''', [userID, due]
+        )
+        await self.db.commit()
+
+        await self.queue_yudminders()
+
+            
+    async def get_yudminders_for(self, userID: int) -> list:
+        cur = await self.db.cursor()
+        now = right_now()
+        await cur.execute('''SELECT oid, * 
+                             FROM yudminders 
+                             WHERE userID LIKE (?)
+                             AND (?) <= due
+                             ORDER BY due ASC
+                             LIMIT 10''', [userID, now])
+        return await cur.fetchall()
 
 
-    @tasks.loop(minutes=5)
-    async def yud_loop(self):
-        await self.queue_yuds()
+class YudImage:
+    im = Image.open('./yud.jpeg')
 
-    async def queue_yuds(self):
-        yudminders = []
-        now = int(dt.datetime.now().timestamp())
-        for userID, yuds_due in self.yudminders.items():
-            delet = set()
-            for due in yuds_due:
-                if due <= now + 300:
-                    yudminders.append((userID, due))
-                    delet.add(due)
-            for due in delet:
-                yuds_due.discard(due)
-        task_stack = [asyncio.create_task(self.yudify(userID, due)) for userID, due in yudminders]
-        if task_stack:
-            await asyncio.wait(task_stack)
+    def __init__(self, size: Optional[Tuple[int, int]], quality: Optional[int]):
+        if size is None:
+            self.width = round(Yud.im.size[0] * random.uniform(0.001, 5))
+            self.height = round(Yud.im.size[1] * random.uniform(0.001, 1.5))
+        else:
+            self.width = size[0]
+            self.height = size[0]
 
-    async def yudify(self, userID: int, due: int):
-        user = self.bot.get_user(userID)
-        delay = due - int(dt.datetime.now().timestamp())
-        await asyncio.sleep(max(delay, 1))
-        try:
-            yud = await self.get_yud()
-            await user.send(file=yud)
-        except discord.errors.Forbidden:
-            bl.error_log.exception(f"{user} probably has the bot blocked. Sad!")
-        except discord.HHTTPException:
-            bl.error_log.exception(f"Dropped a Yud for {user}, irrelevant.")
+        if quality is not None and 0 <= quality <= 100:
+            self.quality = quality
+        else:
+            self.quality = random.uniform(0, 75)
+
+
+    async def get_discord_file(self):
+        yud = await self.get_image_file()
+        temp = BytesIO()
+        yud.save(temp, format='jpeg', quality=self.quality)
+        temp.seek(0)
+        return discord.File(temp, filename='yud.jpeg')
+
+    async def get_image_file(self):
+        return YudImage.im.resize((self.width, self.height))
+        
+
+
