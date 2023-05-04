@@ -115,9 +115,9 @@ class Yud(commands.Cog):
             yud = await YudImage().get_discord_file()
             await user.send(file=yud)
         except discord.errors.Forbidden:
-            bl.error_log.exception(f"{user} probably has the bot blocked. Sad!")
+            bl.error_log.error(f"{user} probably has the bot blocked. Sad!")
         except discord.HHTTPException:
-            bl.error_log.exception(f"Dropped a Yud for {user}, irrelevant.")
+            bl.error_log.error(f"Dropped a Yud for {user}, irrelevant.")
 
 
 
