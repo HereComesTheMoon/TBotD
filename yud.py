@@ -183,7 +183,7 @@ class Yud(commands.Cog):
 class YudImage:
     im = Image.open('./yud.jpeg')
 
-    def __init__(self, size: Optional[Tuple[int, int]], quality: Optional[int]):
+    def __init__(self, size: Optional[Tuple[int, int]] = None, quality: Optional[int] = None):
         if size is None:
             self.width = round(Yud.im.size[0] * random.uniform(0.001, 5))
             self.height = round(Yud.im.size[1] * random.uniform(0.001, 1.5))
