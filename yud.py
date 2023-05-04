@@ -185,8 +185,8 @@ class YudImage:
 
     def __init__(self, size: Optional[Tuple[int, int]] = None, quality: Optional[int] = None):
         if size is None:
-            self.width = round(Yud.im.size[0] * random.uniform(0.001, 5))
-            self.height = round(Yud.im.size[1] * random.uniform(0.001, 1.5))
+            self.width = round(YudImage.im.size[0] * random.uniform(0.001, 5))
+            self.height = round(YudImage.im.size[1] * random.uniform(0.001, 1.5))
         else:
             self.width = size[0]
             self.height = size[0]
