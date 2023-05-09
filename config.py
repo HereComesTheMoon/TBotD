@@ -65,11 +65,13 @@ def is_owner():
     return commands.check(predicate)
 
 
-def on_tbd(msg: discord.Message) -> bool:
-    guild = msg.guild
-    if guild:
-        return msg.guild.id == SERVER_ID
-    return False
+def on_tbd() -> bool:
+    async def predicate(ctx):
+        guild = ctx.guild
+        if guild:
+            return ctx.guild.id == SERVER_ID
+        return False
+    return commands.check(predicate)
 
 def in_bot_channel(msg: discord.Message) -> bool:
     guild = msg.guild
@@ -111,6 +113,9 @@ def initialise_databases():
         cur.execute('''CREATE TABLE 
                        IF NOT EXISTS 
                        yudminders (userID INT, due INT);''')
+        cur.execute('''CREATE TABLE 
+                       IF NOT EXISTS 
+                       part (userID INT, guildID INT, channelID INT, due INT, status TEXT);''')
     con.close()
 
 

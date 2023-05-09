@@ -190,7 +190,7 @@ class RoleManagement(commands.Cog, name='Role Management'):
                 until = timeywimey.right_now() + due
                 await ctx.reply(f"You're already timed out. You can go back to posting <t:{until}:R>, ie. <t:{until}>.")
             else:
-                await ctx.reply(f"Sorry, I don't know anything about this. Something might've gone wrong. :cry:")
+                await ctx.reply("Sorry, I don't know anything about this. Something might've gone wrong. :cry:")
             return
 
         if post == "":

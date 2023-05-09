@@ -66,6 +66,7 @@ class Yud(commands.Cog):
     @commands.command(hidden=True)
     @is_owner()
     async def show_yudminders(self, ctx: commands.Context, *, post:str = ""):
+        # TODO: FIx
         s = []
         for user, yudminders in self.yudminders.items():
             if not yudminders:

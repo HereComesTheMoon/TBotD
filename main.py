@@ -6,6 +6,7 @@ import moderation
 import threadwatch
 import ownertools
 import yud
+import part
 from config import SERVER_ID, LOGGER_CHANNEL, IDGI, ORANGE_PORTAL, BLUE_PORTAL, DENIED, KEY
 from config import FLUSHED, WAVE, CONFOUNDED, WOOZY, CATHEARTS, CATPOUT, RAT, PLEADING
 import random
@@ -56,6 +57,8 @@ async def on_ready():
     await TBotD.add_cog(fixtwitter.FixTwitter(TBotD))
     # Posts Yud 
     await TBotD.add_cog(yud.Yud(TBotD, connection))
+    # !part command
+    await TBotD.add_cog(part.Part(TBotD, tbd, connection))
     # Calls the mods when a :loudspeaker: react is added
     logger_channel = await TBotD.fetch_channel(LOGGER_CHANNEL)
     if isinstance(logger_channel, discord.TextChannel):
