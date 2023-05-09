@@ -8,6 +8,7 @@ import botlog as bl
 
 from tabulate import tabulate
 import config as pm
+from config import on_tbd
 
 
 # Database and aiosqlite notes:
@@ -45,9 +46,10 @@ class Database(commands.Cog):
             await self.emoji_react_removed(reaction_event.emoji)
 
     @commands.Cog.listener()
+    @on_tbd()
     async def on_message(self, msg: discord.Message):
         # TODO: Also strip all symbols when checking whether a word fits the TBD scheme
-        if msg.author.bot or not pm.on_tbd(msg):
+        if msg.author.bot:
             return 0
         words = msg.content.split()
         if len(words) >= 3:
