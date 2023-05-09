@@ -41,6 +41,7 @@ class Part(commands.Cog, name='Part'):
     @commands.command()
     @on_tbd()
     async def rejoin(self, ctx: commands.Context, *, post: str = ""):
+        bl.log(self.rejoin, ctx)
         guild: discord.Guild = ctx.guild
         member: discord.Member = guild.get_member(ctx.author.id)
 
