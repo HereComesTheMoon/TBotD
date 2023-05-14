@@ -65,7 +65,7 @@ def is_owner():
     return commands.check(predicate)
 
 
-def on_tbd() -> bool:
+def on_tbd():
     async def predicate(ctx):
         guild = ctx.guild
         if guild:
@@ -73,11 +73,14 @@ def on_tbd() -> bool:
         return False
     return commands.check(predicate)
 
-def in_bot_channel(msg: discord.Message) -> bool:
-    guild = msg.guild
-    if guild: # breaks if on not-TBD server, like everything else
-        return msg.channel.id == BOT_CHANNEL
-    return False
+def in_bot_channel():
+    def predicate(ctx) -> bool:
+        guild = ctx.guild
+        if guild: 
+            # breaks if on not-TBD server, like everything else
+            return ctx.channel.id == BOT_CHANNEL
+        return False
+    return commands.check(predicate)
 
 def in_dms(msg: discord.Message) -> bool:
     return isinstance(msg.channel, discord.channel.DMChannel)

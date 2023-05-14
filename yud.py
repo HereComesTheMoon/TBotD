@@ -1,6 +1,6 @@
 from typing import Optional, Tuple
 import discord
-from timeywimey import right_now
+from timeywimey import right_now, epoch2iso
 from discord.ext import commands, tasks
 from io import BytesIO
 import botlog as bl
@@ -8,6 +8,7 @@ from PIL import Image
 import datetime as dt
 from zoneinfo import ZoneInfo
 from config import is_owner, in_dms, CATPOUT, CATSCREAM
+from tabulate import tabulate
 import random
 import asyncio
 
@@ -53,7 +54,7 @@ class Yud(commands.Cog):
         cur = await self.db.cursor()
         await cur.execute('''SELECT date, userID, postID, height, width FROM yuds''')
         table_data = list((date, userID, postID, height, width, height * width) for date, userID, postID, height, width in await cur.fetchall())
-        table_data.sort(key=lambda row: row[-1])
+        table_data.sort(key=lambda row: row[-1], reverse=True)
         s = [f"Board of rare Yuds. Thus far discovered: {len(table_data)}. Ordered by total magnitude:"]
         for k, (date, userID, _, height, width, size) in enumerate(table_data[:5], 1):
             date = f"<t:{date}:D>"
@@ -66,15 +67,25 @@ class Yud(commands.Cog):
     @commands.command(hidden=True)
     @is_owner()
     async def show_yudminders(self, ctx: commands.Context, *, post:str = ""):
-        # TODO: FIx
-        s = []
-        for user, yudminders in self.yudminders.items():
-            if not yudminders:
-                continue
-            user = self.bot.get_user(user)
-            nxt = sorted(yudminders).pop(0)
-            s.append(f"{user} : {len(yudminders)=} : <t:{nxt}:R>")
-        await ctx.reply("\n".join(s))
+        cur = await self.db.cursor()
+        await cur.execute('''SELECT
+            userID,
+            MIN(due) AS next_yud,
+            MAX(due) AS last_yud,
+            COUNT(due) AS num_yuds
+            FROM yudminders
+            GROUP BY userID;''')
+
+        res = [
+            (self.bot.get_user(p['userID']).name,
+            p['num_yuds'],
+            epoch2iso(p['next_yud']),
+            epoch2iso(p['last_yud']),
+            ) for p in await cur.fetchall()
+        ]
+        content = "```" + tabulate(res, headers=["User", "#Yuds pending", "Next Yud", "Cooldown"]) + "```"
+
+        await ctx.reply(content=content)
 
     @tasks.loop(minutes=5)
     async def yud_loop(self):
