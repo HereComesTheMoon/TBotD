@@ -19,8 +19,8 @@ class FixTwitter(commands.Cog):
         if "twitter.com/" not in msg.clean_content:
             return
 
-        stuff = msg.clean_content.split("twitter.com/")
-        content = "vxtwitter.com/".join(stuff)
+        stuff = msg.clean_content.split("/twitter.com/")
+        content = "/vxtwitter.com/".join(stuff)
 
         if content == "":
             return
