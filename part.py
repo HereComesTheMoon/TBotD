@@ -13,9 +13,10 @@ class Part(commands.Cog, name='Part'):
         self.loop.start()
         self.db = db
 
-    @commands.command()
+    @commands.command(aliases=['snooze'])
     @on_tbd()
     async def part(self, ctx: commands.Context, *, post: str = ""):
+        """!part 2 hours/days/etc. Leaves channel for specified time."""
         bl.log(self.part, ctx)
         member = ctx.author
         _, due, parse_status = timeywimey.parse_time(post)
@@ -41,6 +42,7 @@ class Part(commands.Cog, name='Part'):
     @commands.command()
     @on_tbd()
     async def rejoin(self, ctx: commands.Context, *, post: str = ""):
+        """Rejoins all !part-ed channels."""
         bl.log(self.rejoin, ctx)
         guild: discord.Guild = ctx.guild
         member: discord.Member = guild.get_member(ctx.author.id)

@@ -16,22 +16,11 @@ class FixTwitter(commands.Cog):
         if msg.author.bot:
             return
 
-        if "twitter.com" not in msg.clean_content:
+        if "twitter.com/" not in msg.clean_content:
             return
 
-        # To prevent the race-condition where Discord didn't load the embed yet
-        for _ in range(100):
-            if msg.embeds:
-                break
-            await asyncio.sleep(0.1)
-
-        content = ""
-        for embed in msg.embeds:
-            if embed.url is None or embed.video.url is None:
-                continue
-            i = embed.url.find("twitter.com/")
-            if i != -1:
-                content += FIXTWITTER_PREFIX + embed.url[i + len("twitter.com/"):] + " "
+        stuff = msg.clean_content.split("twitter.com/")
+        content = "vxtwitter.com/".join(stuff)
 
         if content == "":
             return
