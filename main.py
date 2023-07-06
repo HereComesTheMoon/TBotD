@@ -55,7 +55,7 @@ async def on_ready():
     await TBotD.add_cog(threadwatch.ThreadWatch(TBotD))
     # "Fixes" Twitter links. Relies on vxtwitter.
     await TBotD.add_cog(fixtwitter.FixTwitter(TBotD))
-    # Posts Yud 
+    # Posts Yud
     await TBotD.add_cog(yud.Yud(TBotD, connection))
     # !part command
     await TBotD.add_cog(part.Part(TBotD, tbd, connection))
@@ -120,7 +120,7 @@ async def portal(ctx: commands.Context, *, arg: str = ""):
     """Create a portal to facilitate inter-channel travel. eg. !portal #silly funny doge."""
     bl.log(portal, ctx)
 
-    if ctx.guild is None: 
+    if ctx.guild is None:
         await ctx.message.add_reaction(IDGI)
         return
 
@@ -207,7 +207,36 @@ async def on_message(msg: discord.Message):
 
 @TBotD.event
 async def on_command_error(ctx: commands.Context, error: commands.CommandError):
-    bl.error_log.exception(f"on_command_error : {error} : {ctx.message.content}")
+    # Handle common errors
+    if isinstance(error, commands.CommandNotFound):
+        await ctx.send("Sorry, I don't recognize that command.")
+    elif isinstance(error, commands.MissingRequiredArgument):
+        await ctx.send("It looks like you missed some arguments for this command.")
+    elif isinstance(error, commands.BadArgument):
+        await ctx.send("Bad argument given, please check your command.")
+    elif isinstance(error, commands.CommandOnCooldown):
+        await ctx.send(
+            f"You're using this command too fast. Try again in {error.retry_after:.2f} seconds."
+        )
+    elif isinstance(error, commands.MissingPermissions):
+        await ctx.send(
+            "Sorry, you don't have the necessary permissions for this command."
+        )
+    elif isinstance(error, commands.BotMissingPermissions):
+        await ctx.send(
+            "I don't have the necessary permissions to execute this command."
+        )
+    elif isinstance(error, commands.NotOwner):
+        await ctx.send("This command can only be used by the bot's owner.")
+    else:
+        # If not handled above, log the error and send a generic message.
+        bl.error_log.exception(f"on_command_error : {error} : {ctx.message.content}")
+        await ctx.send(
+            "An unexpected error occurred while trying to execute the command. Please try again later."
+        )
+
+    # Add a reaction to the message to indicate failure
+    await ctx.message.add_reaction("❌")
 
 
 if __name__ == '__main__':
