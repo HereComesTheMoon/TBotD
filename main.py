@@ -55,7 +55,7 @@ async def on_ready():
     await TBotD.add_cog(threadwatch.ThreadWatch(TBotD))
     # "Fixes" Twitter links. Relies on vxtwitter.
     await TBotD.add_cog(fixtwitter.FixTwitter(TBotD))
-    # Posts Yud 
+    # Posts Yud
     await TBotD.add_cog(yud.Yud(TBotD, connection))
     # !part command
     await TBotD.add_cog(part.Part(TBotD, tbd, connection))
@@ -120,7 +120,7 @@ async def portal(ctx: commands.Context, *, arg: str = ""):
     """Create a portal to facilitate inter-channel travel. eg. !portal #silly funny doge."""
     bl.log(portal, ctx)
 
-    if ctx.guild is None: 
+    if ctx.guild is None:
         await ctx.message.add_reaction(IDGI)
         return
 
@@ -207,7 +207,28 @@ async def on_message(msg: discord.Message):
 
 @TBotD.event
 async def on_command_error(ctx: commands.Context, error: commands.CommandError):
-    bl.error_log.exception(f"on_command_error : {error} : {ctx.message.content}")
+    # Handle common errors using match case
+    match type(error):
+        case commands.MissingRequiredArgument():
+            await ctx.message.add_reaction(IDGI)
+        case commands.BadArgument():
+            await ctx.message.add_reaction(IDGI)
+        case commands.CommandOnCooldown(cooldown):
+            await ctx.send(
+                f"You're using this command too fast. Try again in {cooldown.retry_after:.2f} seconds."
+            )
+        case commands.MissingPermissions():
+            await ctx.message.add_reaction(DENIED)
+        case commands.BotMissingPermissions():
+            await ctx.message.add_reaction(DENIED)
+        case commands.NotOwner():
+            await ctx.message.add_reaction(DENIED)
+        case _:
+            # For all other exceptions, log the error
+            bl.error_log.exception(
+                f"on_command_error : {error} : {ctx.message.content}"
+            )
+            await ctx.message.add_reaction(DENIED)
 
 
 if __name__ == '__main__':
