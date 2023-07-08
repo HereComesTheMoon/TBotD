@@ -1,24 +1,48 @@
-import discord
-from discord.ext import commands
-
-import fixtwitter
-import moderation
-import threadwatch
-import ownertools
-import yud
-import part
-from config import SERVER_ID, LOGGER_CHANNEL, IDGI, ORANGE_PORTAL, BLUE_PORTAL, DENIED, KEY
-from config import FLUSHED, WAVE, CONFOUNDED, WOOZY, CATHEARTS, CATPOUT, RAT, PLEADING
 import random
 import re
 import time
-import aiosqlite
 
-import db
-import temproles
-import timeywimey
-import reminders
+import aiosqlite
+import discord
+from discord.ext import commands
+
 import botlog as bl
+import db
+import fixtwitter
+import moderation
+import ownertools
+import part
+import reminders
+import temproles
+import threadwatch
+import timeywimey
+import yud
+from config import (
+    BLUE_PORTAL,
+    CATHEARTS,
+    CATPOUT,
+    CONFOUNDED,
+    DENIED,
+    FLUSHED,
+    IDGI,
+    KEY,
+    LOAD_DB,
+    LOAD_FIXTWITTER,
+    LOAD_MODERATION,
+    LOAD_OWNERTOOLS,
+    LOAD_PART,
+    LOAD_REMINDERS,
+    LOAD_TEMPROLES,
+    LOAD_THREADWATCH,
+    LOAD_YUD,
+    LOGGER_CHANNEL,
+    ORANGE_PORTAL,
+    PLEADING,
+    RAT,
+    SERVER_ID,
+    WAVE,
+    WOOZY,
+)
 
 # Intents
 intents = discord.Intents.all()
@@ -31,6 +55,7 @@ TBotD = commands.Bot(command_prefix='!',
 
 # General issues with the code:
 # The way config.ini imports are handled is inconsistent
+
 
 @TBotD.event
 async def on_ready():
@@ -46,32 +71,44 @@ async def on_ready():
 
     # Cogs:
     # !remindme
-    await TBotD.add_cog(reminders.Reminders(TBotD, connection))
+    if LOAD_REMINDERS:
+        await TBotD.add_cog(reminders.Reminders(TBotD, connection))
     # Store "TBD" title suggestions, and used emoji status (for no real reason)
-    await TBotD.add_cog(db.Database(TBotD, connection))
+    if LOAD_DB:
+        await TBotD.add_cog(db.Database(TBotD, connection))
     # !cwbanme and related commands
-    await TBotD.add_cog(temproles.RoleManagement(TBotD, tbd, connection))
+    if LOAD_TEMPROLES:
+        await TBotD.add_cog(temproles.RoleManagement(TBotD, tbd, connection))
     # Post a comment when a new thread is created. TODO: Should be reworked at some point.
-    await TBotD.add_cog(threadwatch.ThreadWatch(TBotD))
+    if LOAD_THREADWATCH:
+        await TBotD.add_cog(threadwatch.ThreadWatch(TBotD))
     # "Fixes" Twitter links. Relies on vxtwitter.
-    await TBotD.add_cog(fixtwitter.FixTwitter(TBotD))
+    if LOAD_FIXTWITTER:
+        await TBotD.add_cog(fixtwitter.FixTwitter(TBotD))
     # Posts Yud
-    await TBotD.add_cog(yud.Yud(TBotD, connection))
+    if LOAD_YUD:
+        await TBotD.add_cog(yud.Yud(TBotD, connection))
     # !part command
-    await TBotD.add_cog(part.Part(TBotD, tbd, connection))
+    if LOAD_PART:
+        await TBotD.add_cog(part.Part(TBotD, tbd, connection))
     # Calls the mods when a :loudspeaker: react is added
-    logger_channel = await TBotD.fetch_channel(LOGGER_CHANNEL)
-    if isinstance(logger_channel, discord.TextChannel):
-        await TBotD.add_cog(moderation.Moderation(TBotD, logger_channel))
-    else:
-        bl.error_log.error("logger_channel is not a TextChannel. Unable to load Cog.")
+    if LOAD_MODERATION:
+        logger_channel = await TBotD.fetch_channel(LOGGER_CHANNEL)
+        if isinstance(logger_channel, discord.TextChannel):
+            await TBotD.add_cog(moderation.Moderation(TBotD, logger_channel))
+        else:
+            bl.error_log.error(
+                "logger_channel is not a TextChannel. Unable to load Cog."
+            )
     # Owner tools, to kill the bot and to puppet it
-    await TBotD.add_cog(ownertools.OwnerTools(TBotD, connection, tbd, timeywimey.right_now()))
-
+    if LOAD_OWNERTOOLS:
+        await TBotD.add_cog(
+            ownertools.OwnerTools(TBotD, connection, tbd, timeywimey.right_now())
+        )
 
 
 @TBotD.command()
-async def roll(ctx, *, dice: str = '1d2'):
+async def roll(ctx, *, dice: str = "1d2"):
     """Example: !roll 2d6"""
     bl.log(roll, ctx)
     p = re.compile(r'\dd\d{1,7}', re.IGNORECASE)
