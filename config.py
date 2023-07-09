@@ -22,10 +22,21 @@ THREAD_WATCH_CHANNEL = int(config[MODE]['THREAD_WATCH_CHANNEL'])
 LOGGER_CHANNEL = int(config[MODE]['LOGGER_CHANNEL'])
 BOT_CHANNEL = int(config[MODE]['BOT_CHANNEL'])
 
-CW_BAN_ROLE = int(config[MODE]['CW_BAN_ROLE'])
-BLINDED_ROLE = int(config[MODE]['BLINDED_ROLE'])
-MUTED_ROLE = int(config[MODE]['MUTED_ROLE'])
-MOD_ROLE = int(config[MODE]['MOD_ROLE'])
+CW_BAN_ROLE = int(config[MODE]["CW_BAN_ROLE"])
+BLINDED_ROLE = int(config[MODE]["BLINDED_ROLE"])
+MUTED_ROLE = int(config[MODE]["MUTED_ROLE"])
+MOD_ROLE = int(config[MODE]["MOD_ROLE"])
+
+# Load cogs configuration
+LOAD_REMINDERS = config.getboolean("cogs", "reminders", fallback=False)
+LOAD_DB = config.getboolean("cogs", "db", fallback=False)
+LOAD_TEMPROLES = config.getboolean("cogs", "temproles", fallback=False)
+LOAD_THREADWATCH = config.getboolean("cogs", "threadwatch", fallback=False)
+LOAD_FIXTWITTER = config.getboolean("cogs", "fixtwitter", fallback=False)
+LOAD_YUD = config.getboolean("cogs", "yud", fallback=False)
+LOAD_PART = config.getboolean("cogs", "part", fallback=False)
+LOAD_MODERATION = config.getboolean("cogs", "moderation", fallback=False)
+LOAD_OWNERTOOLS = config.getboolean("cogs", "ownertools", fallback=False)
 
 
 # TESTSERVER_ID = int(config['test']['SERVER'])
