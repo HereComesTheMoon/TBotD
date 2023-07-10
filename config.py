@@ -1,7 +1,7 @@
 import configparser
+from aiosqlite import connect, Connection
 import discord
 from discord.ext import commands
-import sqlite3
 import os
 
 # Two modes: 'tbd' and 'test'. 'test' should not be used anymore.
@@ -98,40 +98,41 @@ def in_dms(msg: discord.Message) -> bool:
     return isinstance(msg.channel, discord.channel.DMChannel)
         
 
-def initialise_databases():
-    if os.path.isfile('db.db'):
-        return
-    with sqlite3.connect('db.db') as con:
-        cur = con.cursor()
-        cur.execute('''CREATE TABLE 
-                       IF NOT EXISTS 
-                       memories (userID INTEGER, postID INTEGER, postUrl TEXT, reminder TEXT, queryMade INT, queryDue INT, status TEXT);''')
-        cur.execute('''CREATE TABLE 
-                       IF NOT EXISTS 
-                       remove_at (user_id INTEGER, role_id INTEGER, due INTEGER, status TEXT)''')
-        cur.execute('''CREATE TABLE 
-                       IF NOT EXISTS 
-                       add_at (user_id INTEGER, role_id INTEGER, due INTEGER, status TEXT)''')
-        cur.execute('''CREATE TABLE 
-                       IF NOT EXISTS 
-                       emojis_default (name TEXT, uses INT)''')
-        cur.execute('''CREATE TABLE 
-                       IF NOT EXISTS 
-                       emojis_custom (emoji_id INTEGER, name TEXT, url TEXT, uses INT)''')
-        cur.execute('''CREATE TABLE 
-                       IF NOT EXISTS 
-                       suggestions (date INT, userID INT, postID INT, t TEXT, b TEXT, d TEXT)''')
-        cur.execute('''CREATE TABLE 
-                       IF NOT EXISTS 
-                       used_titles (date INT, t TEXT, b TEXT, d TEXT)''')
-        cur.execute('''CREATE TABLE
-                       IF NOT EXISTS
-                       yuds (date INT, userID INT, postID INT, width INT, height INT, quality INT)''')
-        cur.execute('''CREATE TABLE 
-                       IF NOT EXISTS 
-                       yudminders (userID INT, due INT);''')
-        cur.execute('''CREATE TABLE 
-                       IF NOT EXISTS 
-                       part (userID INT, guildID INT, channelID INT, due INT, status TEXT);''')
-    con.close()
+async def initialise_database(location: str) -> Connection:
+    if os.path.isfile(location):
+        return await connect(location)
+
+    con = await connect(location)
+    async with con.cursor() as cur:
+        await cur.execute('''CREATE TABLE 
+                             IF NOT EXISTS 
+                             memories (userID INTEGER, postID INTEGER, postUrl TEXT, reminder TEXT, queryMade INT, queryDue INT, status TEXT);''')
+        await cur.execute('''CREATE TABLE 
+                             IF NOT EXISTS 
+                             remove_at (user_id INTEGER, role_id INTEGER, due INTEGER, status TEXT)''')
+        await cur.execute('''CREATE TABLE 
+                             IF NOT EXISTS 
+                             add_at (user_id INTEGER, role_id INTEGER, due INTEGER, status TEXT)''')
+        await cur.execute('''CREATE TABLE 
+                             IF NOT EXISTS 
+                             emojis_default (name TEXT, uses INT)''')
+        await cur.execute('''CREATE TABLE 
+                             IF NOT EXISTS 
+                             emojis_custom (emoji_id INTEGER, name TEXT, url TEXT, uses INT)''')
+        await cur.execute('''CREATE TABLE 
+                             IF NOT EXISTS 
+                             suggestions (date INT, userID INT, postID INT, t TEXT, b TEXT, d TEXT)''')
+        await cur.execute('''CREATE TABLE 
+                             IF NOT EXISTS 
+                             used_titles (date INT, t TEXT, b TEXT, d TEXT)''')
+        await cur.execute('''CREATE TABLE
+                             IF NOT EXISTS
+                             yuds (date INT, userID INT, postID INT, width INT, height INT, quality INT)''')
+        await cur.execute('''CREATE TABLE 
+                             IF NOT EXISTS 
+                             yudminders (userID INT, due INT);''')
+        await cur.execute('''CREATE TABLE 
+                             IF NOT EXISTS 
+                             part (userID INT, guildID INT, channelID INT, due INT, status TEXT);''')
+    return con
 
