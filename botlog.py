@@ -1,11 +1,16 @@
 import logging
 from discord.ext import commands
 import timeywimey
+import os
 
 # This handles custom logging messages.
 # This handler logs called commands.
 # There's the issue of handling sensitive data when people use !remindme, but I need to store the reminders anyway,
 # so there is no way around that.
+
+
+if not os.path.exists('./logs/'):
+    os.mkdir('./logs/')
 
 command_log = logging.getLogger('command_log')
 command_log.setLevel(logging.INFO)

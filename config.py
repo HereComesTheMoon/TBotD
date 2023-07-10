@@ -2,6 +2,7 @@ import configparser
 import discord
 from discord.ext import commands
 import sqlite3
+import os
 
 # Two modes: 'tbd' and 'test'. 'test' should not be used anymore.
 MODE = 'tbd'
@@ -98,6 +99,8 @@ def in_dms(msg: discord.Message) -> bool:
         
 
 def initialise_databases():
+    if os.path.isfile('db.db'):
+        return
     with sqlite3.connect('db.db') as con:
         cur = con.cursor()
         cur.execute('''CREATE TABLE 
@@ -132,9 +135,3 @@ def initialise_databases():
                        part (userID INT, guildID INT, channelID INT, due INT, status TEXT);''')
     con.close()
 
-
-if __name__ == '__main__':
-    print("Initialising databases now! Don't worry, these are IF NOT EXISTS statements.")
-    initialise_databases()
-else:
-    print("Waiting until ready!")

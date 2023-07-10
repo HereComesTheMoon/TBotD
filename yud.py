@@ -7,7 +7,7 @@ import botlog as bl
 from PIL import Image
 import datetime as dt
 from zoneinfo import ZoneInfo
-from config import is_owner, in_dms, CATPOUT, CATSCREAM
+from config import is_owner, in_dms, CATPOUT, CATSCREAM, LOAD_YUD
 from tabulate import tabulate
 import random
 import asyncio
@@ -193,7 +193,15 @@ class Yud(commands.Cog):
 
 
 class YudImage:
-    im = Image.open('./yud.jpeg')
+    im = Image.new('RGB', (200, 200))
+    try:
+        im = Image.open('./yud.jpeg')
+    except FileNotFoundError as e:
+        if LOAD_YUD:
+            print(f"No Yud found error: {e}")
+            bl.error_log.exception(f"No Yud found error: {e}")
+            raise e
+
 
     def __init__(self, size: Optional[Tuple[int, int]] = None, quality: Optional[int] = None):
         if size is None:

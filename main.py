@@ -25,6 +25,7 @@ from config import (
     DENIED,
     FLUSHED,
     IDGI,
+    initialise_databases,
     KEY,
     LOAD_DB,
     LOAD_FIXTWITTER,
@@ -61,6 +62,7 @@ TBotD = commands.Bot(command_prefix='!',
 async def on_ready():
     print("Ready!")
     print(time.strftime("%b %d %Y %H:%M:%S", time.localtime()))
+    initialise_databases()
     # Global bot variables. Careful, might overwrite stuff, can be used everywhere.
     connection: aiosqlite.Connection = await aiosqlite.connect("db.db")
 
@@ -269,4 +271,6 @@ async def on_command_error(ctx: commands.Context, error: commands.CommandError):
 
 
 if __name__ == '__main__':
+    print("Running bot now...")
     TBotD.run(KEY)
+    print("Bot is terminating.")
