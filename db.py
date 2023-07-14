@@ -99,7 +99,7 @@ class Database(commands.Cog):
             # output = "Guten Morgen, [ADMIN NAME PENDING]. I hope that you're having a pleasant day. " \
                      # "Here is a list of server name suggestions:\n" + \
                      # "\n".join([" ".join(tuple(row)[3:6]) for row in await cur.fetchall()])
-            # user = self.bot.get_user(pm.OWNER_ID)
+            # user = self.bot.get_user(self.bot.owner_id)
             # await user.send(content=output)
 
     # @loop_send_title_suggestions.before_loop

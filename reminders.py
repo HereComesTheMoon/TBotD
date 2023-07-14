@@ -9,7 +9,7 @@ import botlog as bl
 import timeywimey
 from timeywimey import epoch2iso
 
-from config import IDGI, OWNER_ID
+from config import IDGI
 
 """
 What needs to be stored in the reminders database?
@@ -90,7 +90,7 @@ class Reminders(commands.Cog):
             bl.notification_triggered(tuple(p))
         except discord.HTTPException:
             bl.error_log.exception("Reminder notification error! Not good!")
-            owner = self.bot.get_user(OWNER_ID)
+            owner = self.bot.get_user(self.bot.owner_id)
             assert owner is not None
             await owner.send(content="Reminder notification error! Not good!")
             await owner.send(content=f"{p['reminder']}.\n\nYou set a reminder on the <t:{p['queryMade']}>."

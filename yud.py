@@ -7,7 +7,7 @@ import botlog as bl
 from PIL import Image
 import datetime as dt
 from zoneinfo import ZoneInfo
-from config import is_owner, in_dms, CATPOUT, CATSCREAM, LOAD_YUD
+from config import in_dms, CATPOUT, CATSCREAM, LOAD_YUD
 from tabulate import tabulate
 import random
 import asyncio
@@ -49,7 +49,7 @@ class Yud(commands.Cog):
 
 
     @commands.command(hidden=True)
-    @is_owner()
+    @commands.is_owner()
     async def yudboard(self, ctx: commands.Context):
         cur = await self.db.cursor()
         await cur.execute('''SELECT date, userID, postID, height, width FROM yuds''')
@@ -65,7 +65,7 @@ class Yud(commands.Cog):
         
 
     @commands.command(hidden=True)
-    @is_owner()
+    @commands.is_owner()
     async def show_yudminders(self, ctx: commands.Context, *, post:str = ""):
         cur = await self.db.cursor()
         await cur.execute('''SELECT

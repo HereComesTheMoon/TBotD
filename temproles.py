@@ -61,7 +61,7 @@ class RoleManagement(commands.Cog, name='Role Management'):
         await self.time_out_at(ctx, BLINDED_ROLE, post)
 
 
-    # @config.is_owner()
+    # @commands.is_owner()
     # async def unban(self, ctx: commands.Context, *, user_id: str):
         # """Remove bot-applied roles from a user via a bot command. Can only be called by Mond. This is now unnecessary."""
         # bl.log(self.unban, ctx)

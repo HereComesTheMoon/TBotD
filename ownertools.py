@@ -5,7 +5,7 @@ from aiosqlite import Connection
 
 from tabulate import tabulate
 
-from config import is_owner, OWNER_ID, CATSCREAM, IDGI, BOT_JOINED_AT
+from config import CATSCREAM, IDGI, BOT_JOINED_AT
 
 
 class OwnerTools(commands.Cog, name='Tools'):
@@ -13,10 +13,6 @@ class OwnerTools(commands.Cog, name='Tools'):
         self.bot = bot
 
         self.db = db
-
-        _owner = bot.get_user(OWNER_ID)
-        assert _owner is not None
-        self.owner: discord.User = _owner
 
         self.tbd = tbd
 
@@ -29,7 +25,7 @@ class OwnerTools(commands.Cog, name='Tools'):
             return
 
     @commands.command(hidden=True)
-    @is_owner()
+    @commands.is_owner()
     async def poast(self, ctx: commands.Context, *, arg: str):
         """There is no help for you."""
         bl.log(self.poast, ctx)
@@ -54,7 +50,7 @@ class OwnerTools(commands.Cog, name='Tools'):
 
 
     @commands.command(hidden=True)
-    @is_owner()
+    @commands.is_owner()
     async def kill(self, ctx: commands.Context):
         bl.log(self.kill, ctx)
         print("Shutdown command received.")
@@ -66,13 +62,13 @@ class OwnerTools(commands.Cog, name='Tools'):
     @commands.Cog.listener()
     async def on_member_join(self, member: discord.Member):
         bl.joinleave_log.warning(f"User {member} joined {member.guild} ({member.guild.id}).")
-        await self.owner.send(content=f"User {member} joined {member.guild} ({member.guild.id}). {member.display_avatar.url}")
+        await self.bot.get_user(self.bot.owner_id).send(content=f"User {member} joined {member.guild} ({member.guild.id}). {member.display_avatar.url}")
 
 
     @commands.Cog.listener()
     async def on_member_remove(self, member: discord.Member):
         bl.joinleave_log.warning(f"User {member} left {member.guild} ({member.guild.id}). Joined at {member.joined_at}.")
-        await self.owner.send(content=f"User {member} left {member.guild} ({member.guild.id}). Joined at {member.joined_at}. {member.display_avatar.url}")
+        await self.bot.get_user(self.bot.owner_id).send(content=f"User {member} left {member.guild} ({member.guild.id}). Joined at {member.joined_at}. {member.display_avatar.url}")
 
 
     @commands.command()
@@ -135,7 +131,7 @@ class OwnerTools(commands.Cog, name='Tools'):
 
 
     @commands.command(hidden=True)
-    @is_owner()
+    @commands.is_owner()
     async def least_used_emojis(self, ctx: commands.Context, *, post: str = ""):
         emojis = tuple([emoji.id for emoji in self.tbd.emojis])
         cur = await self.db.cursor()
@@ -162,7 +158,7 @@ class OwnerTools(commands.Cog, name='Tools'):
         await ctx.reply(answer)
 
     @commands.command(hidden=True)
-    @is_owner()
+    @commands.is_owner()
     async def printdbs(self, ctx: commands.Context):
         bl.log(self.printdbs, ctx)
         cur = await self.db.cursor()
@@ -171,7 +167,7 @@ class OwnerTools(commands.Cog, name='Tools'):
         await ctx.reply(content="```" + tabs + "```")
 
     @commands.command(hidden=True)
-    @is_owner()
+    @commands.is_owner()
     async def printdb(self, ctx: commands.Context, *, post: str = ""):
         # TODO: This is horrible, and prone to wrecking your stuff if you accidentally SQL inject yourself. Change!
         bl.log(self.printdb, ctx)

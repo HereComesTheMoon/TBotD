@@ -12,7 +12,6 @@ config.read('config.ini')
 
 
 KEY = config['config']['key']
-OWNER_ID = int(config['config']['OWNER'])
 
 BOT_JOINED_AT = float(config['config']['BOT_JOINED_AT'])
 
@@ -68,13 +67,6 @@ CATPOUT = config['misc']['CATPOUT']
 RAT = config['misc']['RAT']
 PLEADING = config['misc']['PLEADING']
 CATSCREAM = config['misc']['CATSCREAM']
-
-
-def is_owner():
-    async def predicate(ctx):
-        return ctx.author.id == OWNER_ID
-
-    return commands.check(predicate)
 
 
 def on_tbd():

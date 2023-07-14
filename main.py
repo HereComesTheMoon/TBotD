@@ -69,6 +69,9 @@ async def on_ready():
     tbd = TBotD.get_guild(SERVER_ID)
     assert tbd is not None
 
+    app = await TBotD.application_info()
+    TBotD.owner_id = app.owner_id
+    
     # Cogs:
     # !remindme
     if LOAD_REMINDERS:
