@@ -260,6 +260,10 @@ async def on_command_error(ctx: commands.Context, error: commands.CommandError):
             await ctx.message.add_reaction(DENIED)
         case commands.NotOwner():
             await ctx.message.add_reaction(DENIED)
+        case commands.NoPrivateMessage():
+            await ctx.reply("Sorry, this command can only be used on a server, not in DMs.")
+        case commands.BotMissingPermissions(perms):
+            await ctx.reply(f"Bot lacks permissions, namely: {perms}")
         case _:
             # For all other exceptions, log the error
             bl.error_log.exception(

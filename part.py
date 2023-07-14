@@ -5,16 +5,18 @@ import aiosqlite
 import botlog as bl
 import timeywimey
 
-from config import IDGI, SERVER_ID, on_tbd
+from config import IDGI
 
 class Part(commands.Cog, name='Part'):
-    def __init__(self, bot: commands.Bot, tbd: discord.Guild, db: aiosqlite.Connection):
+    def __init__(self, bot: commands.Bot, db: aiosqlite.Connection):
         self.bot = bot
-        self.loop.start()
         self.db = db
+        self.loop.start()
+
 
     @commands.command(aliases=['snooze'])
-    @on_tbd()
+    @commands.guild_only()
+    @commands.bot_has_permissions(manage_roles=True)
     async def part(self, ctx: commands.Context, *, post: str = ""):
         """!part 2 hours/days/etc. Leaves channel for specified time."""
         bl.log(self.part, ctx)
@@ -40,7 +42,8 @@ class Part(commands.Cog, name='Part'):
 
 
     @commands.command()
-    @on_tbd()
+    @commands.guild_only()
+    @commands.bot_has_permissions(manage_roles=True)
     async def rejoin(self, ctx: commands.Context, *, post: str = ""):
         """Rejoins all !part-ed channels."""
         bl.log(self.rejoin, ctx)
@@ -107,7 +110,6 @@ class Part(commands.Cog, name='Part'):
     @tasks.loop(minutes=5)
     async def loop(self):
         await self.queue_unparts()
-        self.TBD = self.bot.get_guild(SERVER_ID)
 
 
     @loop.before_loop
