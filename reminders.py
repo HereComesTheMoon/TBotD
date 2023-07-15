@@ -40,7 +40,9 @@ class Reminders(commands.Cog):
     def __init__(self, bot: commands.Bot, db: aiosqlite.Connection):
         self.bot = bot
         self.reminder_loop.start()
-        self.ping_priv = discord.AllowedMentions(everyone=False, roles=False, replied_user=False)
+        self.ping_priv = discord.AllowedMentions(
+            everyone=False, roles=False, replied_user=False
+        )
         self.db = db
 
     @tasks.loop(hours=1)
@@ -50,42 +52,52 @@ class Reminders(commands.Cog):
     @reminder_loop.before_loop
     async def before_reminder_loop(self):
         await self.bot.wait_until_ready()
-        p = await self.read_data('''WHERE queryDue <= (?) 
-                                    AND status IN ("Present", "Future")''',
-                                 [int(datetime.datetime.now().timestamp()) + 3600 + 60])
+        p = await self.read_data(
+            """WHERE queryDue <= (?) 
+                                    AND status IN ("Present", "Future")""",
+            [int(datetime.datetime.now().timestamp()) + 3600 + 60],
+        )
         task_stack = [asyncio.create_task(self.notify(x)) for x in p]
         if task_stack:
             await asyncio.wait(task_stack)
 
     async def queue_reminders(self):
-        p = await self.read_data('''WHERE queryDue <= (?) 
+        p = await self.read_data(
+            '''WHERE queryDue <= (?) 
                                     AND status LIKE "Future"''',
-                                 [int(datetime.datetime.now().timestamp()) + 3600 + 60])
+            [int(datetime.datetime.now().timestamp()) + 3600 + 60],
+        )
         task_stack = [asyncio.create_task(self.notify(x)) for x in p]
         if task_stack:
             await asyncio.wait(task_stack)
 
     async def notify(self, p: aiosqlite.Row):
         cur = await self.db.cursor()
-        user = self.bot.get_user(p['userID'])
-        delay = p['queryDue'] - int(datetime.datetime.now().timestamp())
-        await cur.execute('''UPDATE memories 
+        user = self.bot.get_user(p["userID"])
+        delay = p["queryDue"] - int(datetime.datetime.now().timestamp())
+        await cur.execute(
+            """UPDATE memories 
                              SET status = "Present" 
-                             WHERE oid = (?)''',
-                          [p['rowid']])
+                             WHERE oid = (?)""",
+            [p["rowid"]],
+        )
         await self.db.commit()
 
         await asyncio.sleep(max(delay, 1))
 
         try:
-            await user.send(content=f"{p['reminder']}.\n\nYou set a reminder on the <t:{p['queryMade']}>. "
-                                    f"Link to original query: {p['postUrl']}",
-                            allowed_mentions=self.ping_priv)
+            await user.send(
+                content=f"{p['reminder']}.\n\nYou set a reminder on the <t:{p['queryMade']}>. "
+                f"Link to original query: {p['postUrl']}",
+                allowed_mentions=self.ping_priv,
+            )
             cur = await self.db.cursor()
-            await cur.execute('''UPDATE memories 
+            await cur.execute(
+                """UPDATE memories 
                                  SET status = "Past" 
-                                 WHERE oid = (?)''',
-                              [p['rowid']])
+                                 WHERE oid = (?)""",
+                [p["rowid"]],
+            )
             await self.db.commit()
             bl.notification_triggered(tuple(p))
         except discord.HTTPException:
@@ -93,22 +105,26 @@ class Reminders(commands.Cog):
             owner = self.bot.get_user(self.bot.owner_id)
             assert owner is not None
             await owner.send(content="Reminder notification error! Not good!")
-            await owner.send(content=f"{p['reminder']}.\n\nYou set a reminder on the <t:{p['queryMade']}>."
-                                     f"Link to original query: {p['postUrl']}",
-                             allowed_mentions=self.ping_priv)
+            await owner.send(
+                content=f"{p['reminder']}.\n\nYou set a reminder on the <t:{p['queryMade']}>."
+                f"Link to original query: {p['postUrl']}",
+                allowed_mentions=self.ping_priv,
+            )
             cur = await self.db.cursor()
-            await cur.execute('''UPDATE memories 
+            await cur.execute(
+                """UPDATE memories 
                                  SET status = "Error" 
-                                 WHERE oid = (?)''',
-                              [p['rowid']])
+                                 WHERE oid = (?)""",
+                [p["rowid"]],
+            )
             await self.db.commit()
 
     @commands.command()
     async def remindme(self, ctx, *, arg: str = ""):
         """eg. !remindme 5 hours, take out the trash"""
         bl.log(self.remindme, ctx)
-        if ',' in arg:  # Format argument, decide if 'what to be reminded of' was given.
-            when, what = arg.split(sep=',', maxsplit=1)
+        if "," in arg:  # Format argument, decide if 'what to be reminded of' was given.
+            when, what = arg.split(sep=",", maxsplit=1)
             when, what = when.strip(), what.strip()  # _, reminder
         else:
             when = arg.strip()
@@ -123,21 +139,25 @@ class Reminders(commands.Cog):
             then = now
         p = {
             # 0 ~ 'oid': INTEGER, primary key, increments automatically
-            'userID': ctx.author.id,
-            'postID': ctx.message.id,
-            'postUrl': ctx.message.jump_url,
-            'reminder': what,
-            'queryMade': now,
-            'queryDue': then,
-            'status': "Future"
+            "userID": ctx.author.id,
+            "postID": ctx.message.id,
+            "postUrl": ctx.message.jump_url,
+            "reminder": what,
+            "queryMade": now,
+            "queryDue": then,
+            "status": "Future",
         }
-        if p['queryDue'] <= p['queryMade'] + 5 or not parse_status:
+        if p["queryDue"] <= p["queryMade"] + 5 or not parse_status:
             await ctx.message.add_reaction(IDGI)
             return
-        await ctx.message.reply(content=f"You'll be reminded on the <t:{p['queryDue']}> of {p['reminder']}. "
-                                        f"Use ``!reminders`` to check your reminders.",
-                                allowed_mentions=self.ping_priv)
-        p['oid'] = await self.add_data(p)  # Store new reminder in database, return primary key row_id
+        await ctx.message.reply(
+            content=f"You'll be reminded on the <t:{p['queryDue']}> of {p['reminder']}. "
+            f"Use ``!reminders`` to check your reminders.",
+            allowed_mentions=self.ping_priv,
+        )
+        p["oid"] = await self.add_data(
+            p
+        )  # Store new reminder in database, return primary key row_id
         await self.queue_reminders()
 
     @commands.command()
@@ -145,40 +165,59 @@ class Reminders(commands.Cog):
         """Show your active reminders."""
         bl.log(self.reminders, ctx)
         userID = ctx.author.id
-        tab = await self.read_data('''WHERE userID LIKE (?) 
+        tab = await self.read_data(
+            """WHERE userID LIKE (?) 
                                       AND status NOT LIKE "Past" 
                                       ORDER BY queryDue ASC 
-                                      LIMIT 10''',
-                                   [userID])
+                                      LIMIT 10""",
+            [userID],
+        )
         results = [
-                    (k + 1,
-                    epoch2iso(p['queryDue']),
-                    p['status'],
-                    p['reminder'].replace("\n", " ")[:85]) # [:85] Trim reminder text if too long.
-                    for (k, p) in enumerate(tab)
-                  ]
+            (
+                k + 1,
+                epoch2iso(p["queryDue"]),
+                p["status"],
+                p["reminder"].replace("\n", " ")[:85],
+            )  # [:85] Trim reminder text if too long.
+            for (k, p) in enumerate(tab)
+        ]
         content = tabulate(results, headers=["No.", "Due", "Status", "Reminder"])
         if not results:
             await ctx.message.reply(content="You currently have no active reminders.")
         else:
-            await ctx.message.reply(content=f"'Due' is given in timezone of the bot. "
-                                            f"When it's midnight for the bot then it's <t:1642028420:t> for you. "
-                                            f"Right now it's <t:{timeywimey.right_now()}> in your time zone, "
-                                            f"and {timeywimey.epoch2iso(timeywimey.right_now())} "
-                                            f"in bot time.\n```" + content + '```',
-                                    allowed_mentions=self.ping_priv)
+            await ctx.message.reply(
+                content=f"'Due' is given in timezone of the bot. "
+                f"When it's midnight for the bot then it's <t:1642028420:t> for you. "
+                f"Right now it's <t:{timeywimey.right_now()}> in your time zone, "
+                f"and {timeywimey.epoch2iso(timeywimey.right_now())} "
+                f"in bot time.\n```" + content + "```",
+                allowed_mentions=self.ping_priv,
+            )
 
     async def read_data(self, query: str, params: list):
         cur = await self.db.cursor()
-        await cur.execute('''SELECT oid, * 
-                             FROM memories ''' + query, params)
+        await cur.execute(
+            """SELECT oid, * 
+                             FROM memories """
+            + query,
+            params,
+        )
         return await cur.fetchall()
 
     async def add_data(self, p: dict):
         cur = await self.db.cursor()
-        await cur.execute('''INSERT INTO memories 
-                             VALUES (?, ?, ?, ?, ?, ?, ?);''',
-                          [p['userID'], p['postID'], p['postUrl'], p['reminder'], p['queryMade'], p['queryDue'],
-                           p['status']])
+        await cur.execute(
+            """INSERT INTO memories 
+                             VALUES (?, ?, ?, ?, ?, ?, ?);""",
+            [
+                p["userID"],
+                p["postID"],
+                p["postUrl"],
+                p["reminder"],
+                p["queryMade"],
+                p["queryDue"],
+                p["status"],
+            ],
+        )
         await self.db.commit()
         return cur.lastrowid

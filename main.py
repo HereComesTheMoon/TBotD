@@ -48,11 +48,12 @@ from config import (
 # Intents
 intents = discord.Intents.all()
 # Status
-activity = discord.Activity(type=discord.ActivityType.listening, name="Poasting! Type '!help' for commands.")
-TBotD = commands.Bot(command_prefix='!',
-                     activity=activity,
-                     intents=intents,
-                     status=discord.Status.online)
+activity = discord.Activity(
+    type=discord.ActivityType.listening, name="Poasting! Type '!help' for commands."
+)
+TBotD = commands.Bot(
+    command_prefix="!", activity=activity, intents=intents, status=discord.Status.online
+)
 
 # General issues with the code:
 # The way config.ini imports are handled is inconsistent
@@ -71,7 +72,7 @@ async def on_ready():
 
     app = await TBotD.application_info()
     TBotD.owner_id = app.owner_id
-    
+
     # Cogs:
     # !remindme
     if LOAD_REMINDERS:
@@ -114,13 +115,13 @@ async def on_ready():
 async def roll(ctx, *, dice: str = "1d2"):
     """Example: !roll 2d6"""
     bl.log(roll, ctx)
-    p = re.compile(r'\dd\d{1,7}', re.IGNORECASE)
+    p = re.compile(r"\dd\d{1,7}", re.IGNORECASE)
     temp = p.match(dice)
     if temp is None:
         await ctx.message.add_reaction(IDGI)
         return
     dice = temp.group()
-    k, n = map(int, dice.split('d'))
+    k, n = map(int, dice.split("d"))
     rolls = [random.randint(1, n) for i in range(k)]
     output = f"{ctx.author.name} rolls {k}d{n}: " + ", ".join(map(str, rolls))
     if k > 1:
@@ -132,7 +133,7 @@ async def roll(ctx, *, dice: str = "1d2"):
 async def choose(ctx, *, post: str = ""):
     """Example: !choose Big Yud, small yud, wide yud"""
     bl.log(choose, ctx)
-    choices = post.split(',')
+    choices = post.split(",")
     if len(choices) <= 1:
         await ctx.message.add_reaction(IDGI)
     else:
@@ -144,8 +145,10 @@ async def now(ctx):
     """What time is it?"""
     bl.log(now, ctx)
     cnow = timeywimey.right_now()
-    await ctx.channel.send(f"It is {timeywimey.epoch2iso(cnow)} in bot time! "
-                           f"It is <t:{cnow}> in your timezone! Unix time: {cnow}")
+    await ctx.channel.send(
+        f"It is {timeywimey.epoch2iso(cnow)} in bot time! "
+        f"It is <t:{cnow}> in your timezone! Unix time: {cnow}"
+    )
 
 
 @TBotD.command()
@@ -155,7 +158,7 @@ async def ping(ctx, *, _: str = ""):
     await ctx.channel.send("Pong!")
 
 
-@TBotD.command(aliases=['teleport'])
+@TBotD.command(aliases=["teleport"])
 async def portal(ctx: commands.Context, *, arg: str = ""):
     """Create a portal to facilitate inter-channel travel. eg. !portal #silly funny doge."""
     bl.log(portal, ctx)
@@ -180,28 +183,34 @@ async def portal(ctx: commands.Context, *, arg: str = ""):
         what = ""
     try:
         # Post target portal
-        embed = discord.Embed(title=f"Portal from #{ctx.channel}",
-                              color=0xe01b24,
-                              url=ctx.message.jump_url,
-                              description=what)
+        embed = discord.Embed(
+            title=f"Portal from #{ctx.channel}",
+            color=0xE01B24,
+            url=ctx.message.jump_url,
+            description=what,
+        )
         embed.set_author(name=ctx.author.name, icon_url=ctx.author.display_avatar.url)
         embed.set_thumbnail(url=ORANGE_PORTAL)
         target_msg = await channel.send(content=ctx.message.jump_url, embed=embed)
 
         # Post origin portal
-        embed = discord.Embed(title=f"Portal to #{channel}",
-                              color=0xe01b24,
-                              url=target_msg.jump_url,
-                              description=what)
+        embed = discord.Embed(
+            title=f"Portal to #{channel}",
+            color=0xE01B24,
+            url=target_msg.jump_url,
+            description=what,
+        )
         embed.set_author(name=ctx.author.name, icon_url=ctx.author.display_avatar.url)
         embed.set_thumbnail(url=BLUE_PORTAL)
         await ctx.channel.send(content=target_msg.jump_url, embed=embed)
 
         # Edit target portal to correctly link to origin portal
-        embed = discord.Embed(title=f"Portal from #{ctx.channel}",
-                              color=0xe01b24,
-                              url=ctx.message.jump_url,
-                              description=what)
+        embed = discord.Embed(
+            title=f"Portal from #{ctx.channel}",
+            color=0xE01B24,
+            url=ctx.message.jump_url,
+            description=what,
+        )
         embed.set_author(name=ctx.author.name, icon_url=ctx.author.display_avatar.url)
         embed.set_thumbnail(url=ORANGE_PORTAL)
         await target_msg.edit(content=ctx.message.jump_url, embed=embed)
@@ -230,8 +239,10 @@ async def when(ctx: commands.Context, *, post: str = ""):
         await ctx.reply("Sorry, I was unable to parse this message.")
         return
     content = f"I parse this as <t:{then}:F>, ie. <t:{then}:R>. This is ``{then}`` in Unix time. Relative timestamps: \n"
-    formats = [':t', ':T', ':d', ':D', '', ':F', ':R']
-    content += "".join([f"Type ``<t:{then}{flag}>`` to write <t:{then}{flag}>.\n" for flag in formats])
+    formats = [":t", ":T", ":d", ":D", "", ":F", ":R"]
+    content += "".join(
+        [f"Type ``<t:{then}{flag}>`` to write <t:{then}{flag}>.\n" for flag in formats]
+    )
     await ctx.reply(content=content)
 
 
@@ -241,7 +252,11 @@ async def on_message(msg: discord.Message):
         return
     assert TBotD.user is not None
     if TBotD.user.mentioned_in(msg):
-        await msg.add_reaction(random.choice([FLUSHED, WAVE, CONFOUNDED, WOOZY, CATHEARTS, CATPOUT, RAT, PLEADING]))
+        await msg.add_reaction(
+            random.choice(
+                [FLUSHED, WAVE, CONFOUNDED, WOOZY, CATHEARTS, CATPOUT, RAT, PLEADING]
+            )
+        )
     await TBotD.process_commands(msg)
 
 
@@ -264,7 +279,9 @@ async def on_command_error(ctx: commands.Context, error: commands.CommandError):
         case commands.NotOwner():
             await ctx.message.add_reaction(DENIED)
         case commands.NoPrivateMessage():
-            await ctx.reply("Sorry, this command can only be used on a server, not in DMs.")
+            await ctx.reply(
+                "Sorry, this command can only be used on a server, not in DMs."
+            )
         case commands.BotMissingPermissions(perms):
             await ctx.reply(f"Bot lacks permissions, namely: {perms}")
         case _:
@@ -275,7 +292,7 @@ async def on_command_error(ctx: commands.Context, error: commands.CommandError):
             await ctx.message.add_reaction(DENIED)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     print("Running bot now...")
     TBotD.run(KEY)
     print("Bot is terminating.")

@@ -4,11 +4,17 @@ import datetime
 
 def epoch2iso(p: int) -> str:
     p = int(p)
-    return datetime.datetime.fromtimestamp(p).replace(microsecond=0).strftime("%d. %B %Y %H:%M")
+    return (
+        datetime.datetime.fromtimestamp(p)
+        .replace(microsecond=0)
+        .strftime("%d. %B %Y %H:%M")
+    )
 
 
 def right_now() -> int:
-    return int(datetime.datetime.now().timestamp())  # I have no idea why I am using this, probably has some reason
+    return int(
+        datetime.datetime.now().timestamp()
+    )  # I have no idea why I am using this, probably has some reason
 
 
 def parse_time(when: str = "") -> tuple[int, int, int]:
@@ -27,4 +33,3 @@ def parse_time(when: str = "") -> tuple[int, int, int]:
     if then < now + 10:
         parse_status = 0
     return now, then, parse_status
-

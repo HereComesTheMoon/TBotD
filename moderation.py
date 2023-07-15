@@ -19,10 +19,14 @@ class Moderation(commands.Cog):
         else:
             # If not in DMs, then only accept if it was a TextChannel on TBD
             guild = react.message.channel.guild
-            if guild is None or guild.id != SERVER_ID or not isinstance(channel, discord.TextChannel):
+            if (
+                guild is None
+                or guild.id != SERVER_ID
+                or not isinstance(channel, discord.TextChannel)
+            ):
                 return
 
-            try: 
+            try:
                 await react.remove(user)
             except discord.HTTPException:
                 pass

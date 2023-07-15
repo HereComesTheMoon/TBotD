@@ -5,22 +5,22 @@ from discord.ext import commands
 import os
 
 # Two modes: 'tbd' and 'test'. 'test' should not be used anymore.
-MODE = 'tbd'
+MODE = "tbd"
 
 config = configparser.ConfigParser()
-config.read('config.ini')
+config.read("config.ini")
 
 
-KEY = config['config']['key']
+KEY = config["config"]["key"]
 
-BOT_JOINED_AT = float(config['config']['BOT_JOINED_AT'])
+BOT_JOINED_AT = float(config["config"]["BOT_JOINED_AT"])
 
 
-SERVER_ID = int(config[MODE]['SERVER'])
+SERVER_ID = int(config[MODE]["SERVER"])
 
-THREAD_WATCH_CHANNEL = int(config[MODE]['THREAD_WATCH_CHANNEL'])
-LOGGER_CHANNEL = int(config[MODE]['LOGGER_CHANNEL'])
-BOT_CHANNEL = int(config[MODE]['BOT_CHANNEL'])
+THREAD_WATCH_CHANNEL = int(config[MODE]["THREAD_WATCH_CHANNEL"])
+LOGGER_CHANNEL = int(config[MODE]["LOGGER_CHANNEL"])
+BOT_CHANNEL = int(config[MODE]["BOT_CHANNEL"])
 
 CW_BAN_ROLE = int(config[MODE]["CW_BAN_ROLE"])
 BLINDED_ROLE = int(config[MODE]["BLINDED_ROLE"])
@@ -44,29 +44,29 @@ LOAD_OWNERTOOLS = config.getboolean("cogs", "ownertools", fallback=False)
 
 # Miscellaneous stuff, emoji and pictures. Nothing sensitive
 config = configparser.ConfigParser()
-config.read('symbols.ini')
+config.read("symbols.ini")
 
-BLUE_PORTAL = config['misc']['BLUE_PORTAL']
-ORANGE_PORTAL = config['misc']['ORANGE_PORTAL']
+BLUE_PORTAL = config["misc"]["BLUE_PORTAL"]
+ORANGE_PORTAL = config["misc"]["ORANGE_PORTAL"]
 
 # Bot reacts with IDGI if it couldn't parse a command
-IDGI = config['misc']['IDGI']
+IDGI = config["misc"]["IDGI"]
 # Bot reacts with NO to message if it doesn't allow something
-DENIED = config['misc']['DENIED']
+DENIED = config["misc"]["DENIED"]
 
 # To alert mods
-LOUDSPEAKER = config['misc']['LOUDSPEAKER']
+LOUDSPEAKER = config["misc"]["LOUDSPEAKER"]
 
 # 'fun':
-FLUSHED = config['misc']['FLUSHED']
-WAVE = config['misc']['WAVE']
-CONFOUNDED = config['misc']['CONFOUNDED']
-WOOZY = config['misc']['WOOZY']
-CATHEARTS = config['misc']['CATHEARTS']
-CATPOUT = config['misc']['CATPOUT']
-RAT = config['misc']['RAT']
-PLEADING = config['misc']['PLEADING']
-CATSCREAM = config['misc']['CATSCREAM']
+FLUSHED = config["misc"]["FLUSHED"]
+WAVE = config["misc"]["WAVE"]
+CONFOUNDED = config["misc"]["CONFOUNDED"]
+WOOZY = config["misc"]["WOOZY"]
+CATHEARTS = config["misc"]["CATHEARTS"]
+CATPOUT = config["misc"]["CATPOUT"]
+RAT = config["misc"]["RAT"]
+PLEADING = config["misc"]["PLEADING"]
+CATSCREAM = config["misc"]["CATSCREAM"]
 
 
 def on_tbd():
@@ -75,20 +75,24 @@ def on_tbd():
         if guild:
             return ctx.guild.id == SERVER_ID
         return False
+
     return commands.check(predicate)
+
 
 def in_bot_channel():
     def predicate(ctx) -> bool:
         guild = ctx.guild
-        if guild: 
+        if guild:
             # breaks if on not-TBD server, like everything else
             return ctx.channel.id == BOT_CHANNEL
         return False
+
     return commands.check(predicate)
+
 
 def in_dms(msg: discord.Message) -> bool:
     return isinstance(msg.channel, discord.channel.DMChannel)
-        
+
 
 async def initialise_database(location: str) -> Connection:
     if os.path.isfile(location):
@@ -96,35 +100,54 @@ async def initialise_database(location: str) -> Connection:
 
     con = await connect(location)
     async with con.cursor() as cur:
-        await cur.execute('''CREATE TABLE 
+        await cur.execute(
+            """CREATE TABLE 
                              IF NOT EXISTS 
-                             memories (userID INTEGER, postID INTEGER, postUrl TEXT, reminder TEXT, queryMade INT, queryDue INT, status TEXT);''')
-        await cur.execute('''CREATE TABLE 
+                             memories (userID INTEGER, postID INTEGER, postUrl TEXT, reminder TEXT, queryMade INT, queryDue INT, status TEXT);"""
+        )
+        await cur.execute(
+            """CREATE TABLE 
                              IF NOT EXISTS 
-                             remove_at (user_id INTEGER, role_id INTEGER, due INTEGER, status TEXT)''')
-        await cur.execute('''CREATE TABLE 
+                             remove_at (user_id INTEGER, role_id INTEGER, due INTEGER, status TEXT)"""
+        )
+        await cur.execute(
+            """CREATE TABLE 
                              IF NOT EXISTS 
-                             add_at (user_id INTEGER, role_id INTEGER, due INTEGER, status TEXT)''')
-        await cur.execute('''CREATE TABLE 
+                             add_at (user_id INTEGER, role_id INTEGER, due INTEGER, status TEXT)"""
+        )
+        await cur.execute(
+            """CREATE TABLE 
                              IF NOT EXISTS 
-                             emojis_default (name TEXT, uses INT)''')
-        await cur.execute('''CREATE TABLE 
+                             emojis_default (name TEXT, uses INT)"""
+        )
+        await cur.execute(
+            """CREATE TABLE 
                              IF NOT EXISTS 
-                             emojis_custom (emoji_id INTEGER, name TEXT, url TEXT, uses INT)''')
-        await cur.execute('''CREATE TABLE 
+                             emojis_custom (emoji_id INTEGER, name TEXT, url TEXT, uses INT)"""
+        )
+        await cur.execute(
+            """CREATE TABLE 
                              IF NOT EXISTS 
-                             suggestions (date INT, userID INT, postID INT, t TEXT, b TEXT, d TEXT)''')
-        await cur.execute('''CREATE TABLE 
+                             suggestions (date INT, userID INT, postID INT, t TEXT, b TEXT, d TEXT)"""
+        )
+        await cur.execute(
+            """CREATE TABLE 
                              IF NOT EXISTS 
-                             used_titles (date INT, t TEXT, b TEXT, d TEXT)''')
-        await cur.execute('''CREATE TABLE
+                             used_titles (date INT, t TEXT, b TEXT, d TEXT)"""
+        )
+        await cur.execute(
+            """CREATE TABLE
                              IF NOT EXISTS
-                             yuds (date INT, userID INT, postID INT, width INT, height INT, quality INT)''')
-        await cur.execute('''CREATE TABLE 
+                             yuds (date INT, userID INT, postID INT, width INT, height INT, quality INT)"""
+        )
+        await cur.execute(
+            """CREATE TABLE 
                              IF NOT EXISTS 
-                             yudminders (userID INT, due INT);''')
-        await cur.execute('''CREATE TABLE 
+                             yudminders (userID INT, due INT);"""
+        )
+        await cur.execute(
+            """CREATE TABLE 
                              IF NOT EXISTS 
-                             part (userID INT, guildID INT, channelID INT, due INT, status TEXT);''')
+                             part (userID INT, guildID INT, channelID INT, due INT, status TEXT);"""
+        )
     return con
-

@@ -7,7 +7,9 @@ from config import THREAD_WATCH_CHANNEL, SERVER_ID
 class ThreadWatch(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
-        self.ping_priv = discord.AllowedMentions(everyone=False, users=False, roles=False, replied_user=False)
+        self.ping_priv = discord.AllowedMentions(
+            everyone=False, users=False, roles=False, replied_user=False
+        )
 
     @commands.Cog.listener()
     async def on_thread_create(self, thread: discord.Thread):
@@ -19,7 +21,9 @@ class ThreadWatch(commands.Cog):
             if thread.guild.id != SERVER_ID:
                 return
 
-            tw_channel: discord.TextChannel = await self.bot.fetch_channel(THREAD_WATCH_CHANNEL)
+            tw_channel: discord.TextChannel = await self.bot.fetch_channel(
+                THREAD_WATCH_CHANNEL
+            )
             if tw_channel is None:
                 bl.error_log.exception("Can't find thread-watch channel.")
                 return
