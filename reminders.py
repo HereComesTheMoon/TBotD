@@ -53,8 +53,10 @@ class Reminders(commands.Cog):
     async def before_reminder_loop(self):
         await self.bot.wait_until_ready()
         p = await self.read_data(
-            """WHERE queryDue <= (?) 
-                                    AND status IN ("Present", "Future")""",
+            """
+            WHERE queryDue <= (?) 
+            AND status IN ('Present', 'Future')
+            """,
             [int(datetime.datetime.now().timestamp()) + 3600 + 60],
         )
         task_stack = [asyncio.create_task(self.notify(x)) for x in p]
@@ -63,8 +65,10 @@ class Reminders(commands.Cog):
 
     async def queue_reminders(self):
         p = await self.read_data(
-            '''WHERE queryDue <= (?) 
-                                    AND status LIKE "Future"''',
+            """
+            WHERE queryDue <= (?) 
+            AND status LIKE 'Future'
+            """,
             [int(datetime.datetime.now().timestamp()) + 3600 + 60],
         )
         task_stack = [asyncio.create_task(self.notify(x)) for x in p]
@@ -76,9 +80,11 @@ class Reminders(commands.Cog):
         user = self.bot.get_user(p["userID"])
         delay = p["queryDue"] - int(datetime.datetime.now().timestamp())
         await cur.execute(
-            """UPDATE memories 
-                             SET status = "Present" 
-                             WHERE oid = (?)""",
+            """
+            UPDATE memories 
+            SET status = 'Present' 
+            WHERE oid = (?)
+            """,
             [p["rowid"]],
         )
         await self.db.commit()
@@ -93,9 +99,11 @@ class Reminders(commands.Cog):
             )
             cur = await self.db.cursor()
             await cur.execute(
-                """UPDATE memories 
-                                 SET status = "Past" 
-                                 WHERE oid = (?)""",
+                """
+                UPDATE memories 
+                SET status = 'Past' 
+                WHERE oid = (?)
+                """,
                 [p["rowid"]],
             )
             await self.db.commit()
@@ -112,9 +120,11 @@ class Reminders(commands.Cog):
             )
             cur = await self.db.cursor()
             await cur.execute(
-                """UPDATE memories 
-                                 SET status = "Error" 
-                                 WHERE oid = (?)""",
+                """
+                UPDATE memories 
+                SET status = 'Error' 
+                WHERE oid = (?)
+                """,
                 [p["rowid"]],
             )
             await self.db.commit()
@@ -166,10 +176,12 @@ class Reminders(commands.Cog):
         bl.log(self.reminders, ctx)
         userID = ctx.author.id
         tab = await self.read_data(
-            """WHERE userID LIKE (?) 
-                                      AND status NOT LIKE "Past" 
-                                      ORDER BY queryDue ASC 
-                                      LIMIT 10""",
+            """
+            WHERE userID LIKE (?) 
+            AND status NOT LIKE 'Past' 
+            ORDER BY queryDue ASC 
+            LIMIT 10
+            """,
             [userID],
         )
         results = [
@@ -197,8 +209,9 @@ class Reminders(commands.Cog):
     async def read_data(self, query: str, params: list):
         cur = await self.db.cursor()
         await cur.execute(
-            """SELECT oid, * 
-                             FROM memories """
+            """
+            SELECT oid, * 
+            FROM memories """
             + query,
             params,
         )
@@ -207,8 +220,10 @@ class Reminders(commands.Cog):
     async def add_data(self, p: dict):
         cur = await self.db.cursor()
         await cur.execute(
-            """INSERT INTO memories 
-                             VALUES (?, ?, ?, ?, ?, ?, ?);""",
+            """
+            INSERT INTO memories 
+            VALUES (?, ?, ?, ?, ?, ?, ?);
+            """,
             [
                 p["userID"],
                 p["postID"],

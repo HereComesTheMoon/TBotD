@@ -61,19 +61,6 @@ class RoleManagement(commands.Cog, name="Role Management"):
         bl.log(self.blindmeat, ctx)
         await self.time_out_at(ctx, BLINDED_ROLE, post)
 
-    # @commands.is_owner()
-    # async def unban(self, ctx: commands.Context, *, user_id: str):
-    # """Remove bot-applied roles from a user via a bot command. Can only be called by Mond. This is now unnecessary."""
-    # bl.log(self.unban, ctx)
-    # try:
-    # member: discord.Member = self.TBD.get_member(int(user_id))
-    # roles = [self.TBD.get_role(x) for x in [MUTED_ROLE, CW_BAN_ROLE, BLINDED_ROLE]]
-    # for role in roles:
-    # await member.remove_roles(role, reason="!unban command was called. Can only be called by Mond.")
-    # await ctx.message.add_reaction(CATHEARTS)
-    # except discord.HTTPException:
-    # await ctx.message.add_reaction(IDGI)
-
     # endregion
 
     # region loops
@@ -114,9 +101,11 @@ class RoleManagement(commands.Cog, name="Role Management"):
         delay = row["due"] - timeywimey.right_now()
 
         await cur.execute(
-            """UPDATE remove_at
-                             SET status = "Present"
-                             WHERE oid = (?)""",
+            """
+            UPDATE remove_at
+            SET status = 'Present'
+            WHERE oid = (?)
+            """,
             [row["rowid"]],
         )
         await self.db.commit()
@@ -129,17 +118,21 @@ class RoleManagement(commands.Cog, name="Role Management"):
         except discord.HTTPException:
             bl.error_log.exception("Bot role removal error!")
             await cur.execute(
-                """UPDATE remove_at
-                                 SET status = "Error"
-                                 WHERE oid = (?)""",
+                """
+                UPDATE remove_at
+                SET status = 'Error'
+                WHERE oid = (?)
+                """,
                 [row["rowid"]],
             )
             await self.db.commit()
             return
         await cur.execute(
-            """UPDATE remove_at
-                             SET status = "Past"
-                             WHERE oid = (?)""",
+            """
+            UPDATE remove_at
+            SET status = 'Past'
+            WHERE oid = (?)
+            """,
             [row["rowid"]],
         )
         await self.db.commit()
@@ -153,9 +146,11 @@ class RoleManagement(commands.Cog, name="Role Management"):
         delay = row["due"] - timeywimey.right_now()
 
         await cur.execute(
-            """UPDATE add_at
-                             SET status = "Present"
-                             WHERE oid = (?)""",
+            """
+            UPDATE add_at
+            SET status = 'Present'
+            WHERE oid = (?)
+            """,
             [row["rowid"]],
         )
         await self.db.commit()
@@ -168,18 +163,22 @@ class RoleManagement(commands.Cog, name="Role Management"):
         except discord.HTTPException:
             bl.error_log.exception("Bot role addition error!")
             await cur.execute(
-                """UPDATE add_at
-                                 SET status = "Error"
-                                 WHERE oid = (?)""",
+                """
+                UPDATE add_at
+                SET status = 'Error'
+                WHERE oid = (?)
+                """,
                 [row["rowid"]],
             )
             await self.db.commit()
             return 0  # Missing permissions
 
         await cur.execute(
-            """UPDATE add_at
-                             SET status = "Past"
-                             WHERE oid = (?)""",
+            """
+            UPDATE add_at
+            SET status = 'Past'
+            WHERE oid = (?)
+            """,
             [row["rowid"]],
         )
         await self.db.commit()
@@ -292,11 +291,13 @@ class RoleManagement(commands.Cog, name="Role Management"):
         # TABLE remove_at (user_id INTEGER, role_id INTEGER, due INTEGER, status TEXT)
         cur = await self.db.cursor()
         await cur.execute(
-            """SELECT oid, * FROM remove_at
-                             WHERE user_id = (?)
-                             AND role_id = (?)
-                             AND status IN ("Present", "Future")
-                             ORDER BY due ASC""",
+            """
+            SELECT oid, * FROM remove_at
+            WHERE user_id = (?)
+            AND role_id = (?)
+            AND status IN ('Present', 'Future')
+            ORDER BY due ASC
+            """,
             [user_id, role_id],
         )
         row = await cur.fetchone()
@@ -316,8 +317,10 @@ class RoleManagement(commands.Cog, name="Role Management"):
         # TABLE add_at (user_id INTEGER, role_id INTEGER, due INTEGER, status TEXT)
         cur = await self.db.cursor()
         await cur.execute(
-            """INSERT INTO add_at
-                             VALUES (?, ?, ?, ?);""",
+            """
+            INSERT INTO add_at
+            VALUES (?, ?, ?, ?);
+            """,
             (user_id, role_id, due, "Future"),
         )
         await self.db.commit()
@@ -328,8 +331,9 @@ class RoleManagement(commands.Cog, name="Role Management"):
         # TABLE remove_at (user_id INTEGER, role_id INTEGER, due INTEGER, status TEXT)
         cur = await self.db.cursor()
         await cur.execute(
-            """INSERT INTO remove_at
-                             VALUES (?, ?, ?, ?);""",
+            """
+            INSERT INTO remove_at
+            VALUES (?, ?, ?, ?);""",
             (user_id, role_id, due, "Future"),
         )
         await self.db.commit()
@@ -339,9 +343,10 @@ class RoleManagement(commands.Cog, name="Role Management"):
         # TABLE add_at (user_id INTEGER, role_id INTEGER, due INTEGER, status TEXT)
         cur = await self.db.cursor()
         await cur.execute(
-            '''SELECT oid, *
-                             FROM add_at WHERE due <= (?)
-                             AND status LIKE "Future"''',
+            """
+            SELECT oid, *
+            FROM add_at WHERE due <= (?)
+            AND status LIKE 'Future'""",
             [int(datetime.datetime.now().timestamp()) + 3600 + 60],
         )
         return await cur.fetchall()
@@ -350,10 +355,12 @@ class RoleManagement(commands.Cog, name="Role Management"):
         # TABLE remove_at (user_id INTEGER, role_id INTEGER, due INTEGER, status TEXT)
         cur = await self.db.cursor()
         await cur.execute(
-            '''SELECT oid, *
-                             FROM remove_at
-                             WHERE due <= (?)
-                             AND status LIKE "Future"''',
+            """
+            SELECT oid, *
+            FROM remove_at
+            WHERE due <= (?)
+            AND status LIKE 'Future'
+            """,
             [int(datetime.datetime.now().timestamp()) + 3600 + 60],
         )
         return await cur.fetchall()

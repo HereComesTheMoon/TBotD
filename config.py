@@ -101,53 +101,73 @@ async def initialise_database(location: str) -> Connection:
     con = await connect(location)
     async with con.cursor() as cur:
         await cur.execute(
-            """CREATE TABLE 
-                             IF NOT EXISTS 
-                             memories (userID INTEGER, postID INTEGER, postUrl TEXT, reminder TEXT, queryMade INT, queryDue INT, status TEXT);"""
+            """
+            CREATE TABLE 
+            IF NOT EXISTS 
+            memories (userID INTEGER, postID INTEGER, postUrl TEXT, reminder TEXT, queryMade INT, queryDue INT, status TEXT);
+            """
         )
         await cur.execute(
-            """CREATE TABLE 
-                             IF NOT EXISTS 
-                             remove_at (user_id INTEGER, role_id INTEGER, due INTEGER, status TEXT)"""
+            """
+            CREATE TABLE 
+            IF NOT EXISTS 
+            remove_at (user_id INTEGER, role_id INTEGER, due INTEGER, status TEXT)
+            """
         )
         await cur.execute(
-            """CREATE TABLE 
-                             IF NOT EXISTS 
-                             add_at (user_id INTEGER, role_id INTEGER, due INTEGER, status TEXT)"""
+            """
+            CREATE TABLE 
+            IF NOT EXISTS 
+            add_at (user_id INTEGER, role_id INTEGER, due INTEGER, status TEXT)
+            """
         )
         await cur.execute(
-            """CREATE TABLE 
-                             IF NOT EXISTS 
-                             emojis_default (name TEXT, uses INT)"""
+            """
+            CREATE TABLE 
+            IF NOT EXISTS 
+            emojis_default (name TEXT, uses INT)
+            """
         )
         await cur.execute(
-            """CREATE TABLE 
-                             IF NOT EXISTS 
-                             emojis_custom (emoji_id INTEGER, name TEXT, url TEXT, uses INT)"""
+            """
+            CREATE TABLE 
+            IF NOT EXISTS 
+            emojis_custom (emoji_id INTEGER, name TEXT, url TEXT, uses INT)
+            """
         )
         await cur.execute(
-            """CREATE TABLE 
-                             IF NOT EXISTS 
-                             suggestions (date INT, userID INT, postID INT, t TEXT, b TEXT, d TEXT)"""
+            """
+            CREATE TABLE 
+            IF NOT EXISTS 
+            suggestions (date INT, userID INT, postID INT, t TEXT, b TEXT, d TEXT)
+            """
         )
         await cur.execute(
-            """CREATE TABLE 
-                             IF NOT EXISTS 
-                             used_titles (date INT, t TEXT, b TEXT, d TEXT)"""
+            """
+            CREATE TABLE 
+            IF NOT EXISTS 
+            used_titles (date INT, t TEXT, b TEXT, d TEXT)
+            """
         )
         await cur.execute(
-            """CREATE TABLE
-                             IF NOT EXISTS
-                             yuds (date INT, userID INT, postID INT, width INT, height INT, quality INT)"""
+            """
+            CREATE TABLE
+            IF NOT EXISTS
+            yuds (date INT, userID INT, postID INT, width INT, height INT, quality INT)
+            """
         )
         await cur.execute(
-            """CREATE TABLE 
-                             IF NOT EXISTS 
-                             yudminders (userID INT, due INT);"""
+            """
+            CREATE TABLE 
+            IF NOT EXISTS 
+            yudminders (userID INT, due INT);
+            """
         )
         await cur.execute(
-            """CREATE TABLE 
-                             IF NOT EXISTS 
-                             part (userID INT, guildID INT, channelID INT, due INT, status TEXT);"""
+            """
+            CREATE TABLE 
+            IF NOT EXISTS 
+            part (userID INT, guildID INT, channelID INT, due INT, status TEXT);
+            """
         )
     return con

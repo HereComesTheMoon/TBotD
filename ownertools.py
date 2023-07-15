@@ -104,7 +104,7 @@ class OwnerTools(commands.Cog, name="Tools"):
 
         cur = await self.db.cursor()
         await cur.execute(
-            '''SELECT COUNT(*) AS count FROM memories WHERE status != "Past"'''
+            """SELECT COUNT(*) AS count FROM memories WHERE status != 'Past'"""
         )
         result = await cur.fetchone()
         assert result is not None
@@ -130,10 +130,12 @@ class OwnerTools(commands.Cog, name="Tools"):
         cur = await self.db.cursor()
         emojis = tuple([emoji.id for emoji in self.tbd.emojis])
         await cur.execute(
-            f"""SELECT * FROM emojis_custom 
-                              WHERE emoji_id IN({','.join(['?'] * len(emojis))})
-                              ORDER BY RANDOM() 
-                              LIMIT 3""",
+            f"""
+            SELECT * FROM emojis_custom 
+            WHERE emoji_id IN({','.join(['?'] * len(emojis))})
+            ORDER BY RANDOM() 
+            LIMIT 3
+            """,
             emojis,
         )
         result = await cur.fetchall()
@@ -151,9 +153,11 @@ class OwnerTools(commands.Cog, name="Tools"):
         emojis = tuple([emoji.id for emoji in self.tbd.emojis])
         cur = await self.db.cursor()
         await cur.execute(
-            f"""SELECT name, emoji_id, uses FROM emojis_custom
-                              WHERE emoji_id IN({','.join(['?'] * len(emojis))})
-                              ORDER BY uses ASC""",
+            f"""
+            SELECT name, emoji_id, uses FROM emojis_custom
+            WHERE emoji_id IN({','.join(['?'] * len(emojis))})
+            ORDER BY uses ASC
+            """,
             emojis,
         )
         answer = "Here's a table of least-used emojis:"
@@ -202,9 +206,11 @@ class OwnerTools(commands.Cog, name="Tools"):
         bl.log(self.printdb, ctx)
         cur = await self.db.cursor()
         await cur.execute(
-            """SELECT name FROM sqlite_master
-                             WHERE type ='table'
-                             AND name NOT LIKE 'sqlite_%';"""
+            """
+            SELECT name FROM sqlite_master
+            WHERE type ='table'
+            AND name NOT LIKE 'sqlite_%';
+            """
         )
         table_names = [tuple(x)[0] for x in await cur.fetchall()]
         if post not in table_names:

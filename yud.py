@@ -44,8 +44,10 @@ class Yud(commands.Cog):
             cur = await self.db.cursor()
             # yuds (date INT, userID INT, postID INT, width INT, height INT, quality INT)
             await cur.execute(
-                """INSERT INTO yuds 
-                                 VALUES (?, ?, ?, ?, ?, ?);""",
+                """
+                INSERT INTO yuds 
+                VALUES (?, ?, ?, ?, ?, ?);
+                """,
                 [
                     int(dt.datetime.now().timestamp()),
                     msg.author.id,
@@ -84,7 +86,8 @@ class Yud(commands.Cog):
     async def show_yudminders(self, ctx: commands.Context, *, post: str = ""):
         cur = await self.db.cursor()
         await cur.execute(
-            """SELECT
+            """
+            SELECT
             userID,
             MIN(due) AS next_yud,
             MAX(due) AS last_yud,
@@ -214,12 +217,14 @@ class Yud(commands.Cog):
         cur = await self.db.cursor()
         now = right_now()
         await cur.execute(
-            """SELECT oid, * 
-                             FROM yudminders 
-                             WHERE userID LIKE (?)
-                             AND (?) <= due
-                             ORDER BY due ASC
-                             LIMIT 10""",
+            """
+            SELECT oid, * 
+            FROM yudminders 
+            WHERE userID LIKE (?)
+            AND (?) <= due
+            ORDER BY due ASC
+            LIMIT 10
+            """,
             [userID, now],
         )
         return await cur.fetchall()

@@ -36,7 +36,8 @@ class Part(commands.Cog, name="Part"):
         await cur.execute(
             """
             INSERT INTO part
-            VALUES (?, ?, ?, ?, ?);""",
+            VALUES (?, ?, ?, ?, ?);
+            """,
             (userID, guildID, channelID, due, "Future"),
         )
         await self.db.commit()
@@ -70,7 +71,7 @@ class Part(commands.Cog, name="Part"):
         await cur.execute(
             """
             UPDATE part
-            SET status = "Past"
+            SET status = 'Past'
             WHERE userID = (?)
             AND guildID = (?);
             """,
@@ -85,9 +86,11 @@ class Part(commands.Cog, name="Part"):
         delay = row["due"] - timeywimey.right_now()
         cur = await self.db.cursor()
         await cur.execute(
-            """UPDATE part
-                             SET status = "Present"
-                             WHERE oid = (?)""",
+            """
+            UPDATE part
+            SET status = 'Present'
+            WHERE oid = (?)
+            """,
             [row["rowid"]],
         )
         await self.db.commit()
@@ -100,18 +103,22 @@ class Part(commands.Cog, name="Part"):
         except discord.HTTPException:
             bl.error_log.exception("Bot unparting permission change error!")
             await cur.execute(
-                """UPDATE part
-                                 SET status = "Error"
-                                 WHERE oid = (?)""",
+                """
+                UPDATE part
+                SET status = 'Error'
+                WHERE oid = (?)
+                """,
                 [row["rowid"]],
             )
             await self.db.commit()
             return
 
         await cur.execute(
-            """UPDATE part
-                             SET status = "Past"
-                             WHERE oid = (?)""",
+            """
+            UPDATE part
+            SET status = 'Past'
+            WHERE oid = (?)
+            """,
             [row["rowid"]],
         )
         await self.db.commit()
@@ -137,10 +144,12 @@ class Part(commands.Cog, name="Part"):
     async def get_rejoins(self):
         cur = await self.db.cursor()
         await cur.execute(
-            '''SELECT oid, *
-                             FROM part
-                             WHERE due <= (?)
-                             AND status LIKE "Future"''',
+            """
+            SELECT oid, *
+            FROM part
+            WHERE due <= (?)
+            AND status LIKE 'Future'
+            """,
             [timeywimey.right_now() + 360 + 1],
         )
         return await cur.fetchall()
