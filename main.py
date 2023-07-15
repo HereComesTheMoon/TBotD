@@ -71,7 +71,8 @@ async def on_ready():
     assert tbd is not None
 
     app = await TBotD.application_info()
-    TBotD.owner_id = app.owner_id
+    # print(f"{app}")
+    TBotD.owner_id = app.owner.id
 
     # Cogs:
     # !remindme
@@ -94,7 +95,7 @@ async def on_ready():
         await TBotD.add_cog(yud.Yud(TBotD, connection))
     # !part command
     if LOAD_PART:
-        await TBotD.add_cog(part.Part(TBotD, tbd, connection))
+        await TBotD.add_cog(part.Part(TBotD, connection))
     # Calls the mods when a :loudspeaker: react is added
     if LOAD_MODERATION:
         logger_channel = await TBotD.fetch_channel(LOGGER_CHANNEL)
