@@ -4,28 +4,22 @@ import discord
 from discord.ext import commands
 import os
 
-# Two modes: 'tbd' and 'test'. 'test' should not be used anymore.
-MODE = "tbd"
-
 config = configparser.ConfigParser()
 config.read("config.ini")
 
 
 KEY = config["config"]["key"]
 
-BOT_JOINED_AT = float(config["config"]["BOT_JOINED_AT"])
+SERVER_ID = int(config["tbd"]["SERVER"])
 
+THREAD_WATCH_CHANNEL = int(config["tbd"]["THREAD_WATCH_CHANNEL"])
+LOGGER_CHANNEL = int(config["tbd"]["LOGGER_CHANNEL"])
+BOT_CHANNEL = int(config["tbd"]["BOT_CHANNEL"])
 
-SERVER_ID = int(config[MODE]["SERVER"])
-
-THREAD_WATCH_CHANNEL = int(config[MODE]["THREAD_WATCH_CHANNEL"])
-LOGGER_CHANNEL = int(config[MODE]["LOGGER_CHANNEL"])
-BOT_CHANNEL = int(config[MODE]["BOT_CHANNEL"])
-
-CW_BAN_ROLE = int(config[MODE]["CW_BAN_ROLE"])
-BLINDED_ROLE = int(config[MODE]["BLINDED_ROLE"])
-MUTED_ROLE = int(config[MODE]["MUTED_ROLE"])
-MOD_ROLE = int(config[MODE]["MOD_ROLE"])
+CW_BAN_ROLE = int(config["tbd"]["CW_BAN_ROLE"])
+BLINDED_ROLE = int(config["tbd"]["BLINDED_ROLE"])
+MUTED_ROLE = int(config["tbd"]["MUTED_ROLE"])
+MOD_ROLE = int(config["tbd"]["MOD_ROLE"])
 
 # Load cogs configuration
 LOAD_REMINDERS = config.getboolean("cogs", "reminders", fallback=False)
@@ -37,9 +31,6 @@ LOAD_YUD = config.getboolean("cogs", "yud", fallback=False)
 LOAD_PART = config.getboolean("cogs", "part", fallback=False)
 LOAD_MODERATION = config.getboolean("cogs", "moderation", fallback=False)
 LOAD_OWNERTOOLS = config.getboolean("cogs", "ownertools", fallback=False)
-
-
-# TESTSERVER_ID = int(config['test']['SERVER'])
 
 
 # Miscellaneous stuff, emoji and pictures. Nothing sensitive

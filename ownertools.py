@@ -5,7 +5,7 @@ from aiosqlite import Connection
 
 from tabulate import tabulate
 
-from config import CATSCREAM, IDGI, BOT_JOINED_AT
+from config import CATSCREAM, IDGI
 
 
 class OwnerTools(commands.Cog, name="Tools"):
@@ -82,9 +82,7 @@ class OwnerTools(commands.Cog, name="Tools"):
         bl.log(self.stats, ctx)
         data = []
 
-        data.append(
-            f"I joined the server <t:{int(BOT_JOINED_AT)}:R>, and the last time I was restarted was <t:{self.went_online_at}:R>."
-        )
+        data.append(f"The last time I was restarted was <t:{self.went_online_at}:R>.")
 
         cur = await self.db.cursor()
         await cur.execute("""SELECT COUNT(*) AS count FROM suggestions""")
