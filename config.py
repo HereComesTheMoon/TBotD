@@ -31,6 +31,7 @@ LOAD_YUD = config.getboolean("cogs", "yud", fallback=False)
 LOAD_PART = config.getboolean("cogs", "part", fallback=False)
 LOAD_MODERATION = config.getboolean("cogs", "moderation", fallback=False)
 LOAD_OWNERTOOLS = config.getboolean("cogs", "ownertools", fallback=False)
+LOAD_TBDTOOLS = config.getboolean("cogs", "tbdtools", fallback=False)
 
 
 # Miscellaneous stuff, emoji and pictures. Nothing sensitive
