@@ -2,8 +2,6 @@ import aiosqlite
 import discord
 from discord.ext import commands
 
-import config as pm
-
 
 class Database(commands.Cog):
     def __init__(self, bot: commands.Bot, db: aiosqlite.Connection):
@@ -14,144 +12,67 @@ class Database(commands.Cog):
         self.db = db
 
     @commands.Cog.listener()
-    async def on_raw_reaction_add(self, reaction_event: discord.RawReactionActionEvent):
-        if (
-            reaction_event.guild_id is None
-            or reaction_event.member.bot
-            or reaction_event.guild_id != pm.SERVER_ID
-        ):
-            return 0
-        if reaction_event.emoji.is_custom_emoji():
-            await self.custom_emoji_reacted(reaction_event.emoji)
-        else:
-            await self.emoji_reacted(reaction_event.emoji)
+    async def on_raw_reaction_add(self, event: discord.RawReactionActionEvent):
+        member = await self.bot.fetch_user(event.user_id)
+        if member.bot:
+            return
+
+        # Use 0 for DMs
+        # This breaks if there exists a real Discord guild with ID 0
+        guild_id = event.guild_id if event.guild_id is not None else 0
+        emoji = event.emoji
+        async with await self.db.cursor() as cur:
+            if event.emoji.is_custom_emoji():
+                await cur.execute(
+                    """
+                    INSERT INTO emojis_custom (GuildID, EmojiID, Name, URL, Uses)
+                    VALUES (?, ?, ?, ?, 1)
+                    ON CONFLICT(GuildID, EmojiID) DO
+                    UPDATE SET Uses = Uses + 1;
+                    """,
+                    [guild_id, emoji.id, emoji.name, str(emoji.url)],
+                )
+            else:
+                await cur.execute(
+                    """
+                    INSERT INTO emojis_default (GuildID, Name, Uses)
+                    VALUES (?, ?, 1)
+                    ON CONFLICT(GuildID, Name) DO
+                    UPDATE SET Uses = Uses + 1;
+                    """,
+                    [guild_id, emoji.name],
+                )
+        await self.db.commit()
 
     @commands.Cog.listener()
-    async def on_raw_reaction_remove(
-        self, reaction_event: discord.RawReactionActionEvent
-    ):
-        member = await self.bot.fetch_user(reaction_event.user_id)
-        if (
-            reaction_event.guild_id is None
-            or member.bot
-            or reaction_event.guild_id != pm.SERVER_ID
-        ):
-            return 0
-        if reaction_event.emoji.is_custom_emoji():
-            await self.custom_emoji_react_removed(reaction_event.emoji)
-        else:
-            await self.emoji_react_removed(reaction_event.emoji)
+    async def on_raw_reaction_remove(self, event: discord.RawReactionActionEvent):
+        member = await self.bot.fetch_user(event.user_id)
+        if member.bot:
+            return
 
-    async def emoji_reacted(self, emoji: discord.PartialEmoji):
-        # TABLE emojis_default (name TEXT, uses INT)
-        cur = await self.db.cursor()
-        await cur.execute(
-            """
-            SELECT * 
-            FROM emojis_default 
-            WHERE name = (?)
-            """,
-            [emoji.name],
-        )
-        rows = list(await cur.fetchall())
-        if not rows:
-            await cur.execute(
-                """
-                INSERT INTO emojis_default 
-                VALUES (?,?)
-                """,
-                [emoji.name, 1],
-            )
-        else:
-            await cur.execute(
-                """
-                UPDATE emojis_default 
-                SET uses = uses + 1 
-                WHERE name = (?)
-                """,
-                [emoji.name],
-            )
-        await self.db.commit()
-
-    async def emoji_react_removed(self, emoji: discord.PartialEmoji):
-        # TABLE emojis_default (name TEXT, uses INT)
-        cur = await self.db.cursor()
-        await cur.execute(
-            """
-            SELECT * 
-            FROM emojis_default 
-            WHERE name = (?)
-            """,
-            [emoji.name],
-        )
-        rows = list(await cur.fetchall())
-        if not rows:
-            pass
-        else:
-            await cur.execute(
-                """
-                UPDATE emojis_default 
-                SET uses = uses - 1 
-                WHERE name = (?)
-                """,
-                [emoji.name],
-            )
-        await self.db.commit()
-
-    async def custom_emoji_reacted(self, emoji: discord.PartialEmoji):
-        # TABLE emojis_reacts (emoji_id INTEGER, name TEXT, url TEXT, uses INT)
-        cur = await self.db.cursor()
-        emoji_id = emoji.id
-        await cur.execute(
-            """
-            SELECT * 
-            FROM emojis_custom 
-            WHERE emoji_id = (?)
-            """,
-            [emoji_id],
-        )
-        rows = list(await cur.fetchall())
-        if not rows:
-            await cur.execute(
-                """
-                INSERT INTO emojis_custom 
-                VALUES (?,?,?,?)
-                """,
-                [emoji_id, emoji.name, str(emoji.url), 1],
-            )
-        else:
-            await cur.execute(
-                """
-                UPDATE emojis_custom 
-                SET uses = uses + 1 
-                WHERE emoji_id = (?)
-                """,
-                [emoji_id],
-            )
-        await self.db.commit()
-
-    async def custom_emoji_react_removed(self, emoji: discord.PartialEmoji):
-        # TABLE emojis_reacts (emoji_id INTEGER, name TEXT, url TEXT, uses INT)
-        cur = await self.db.cursor()
-        emoji_id = emoji.id
-        await cur.execute(
-            """
-            SELECT * 
-            FROM emojis_custom 
-            WHERE emoji_id = (?)
-            """,
-            [emoji_id],
-        )
-        rows = list(await cur.fetchall())
-        if not rows:
-            pass
-        else:
-            await cur.execute(
-                """
-                UPDATE emojis_custom 
-                SET uses = uses - 1 
-                WHERE emoji_id = (?)
-                """,
-                [emoji_id],
-            )
+        # Use 0 for DMs
+        # This breaks if there exists a real Discord guild with ID 0
+        guild_id = event.guild_id if event.guild_id is not None else 0
+        emoji = event.emoji
+        async with await self.db.cursor() as cur:
+            if event.emoji.is_custom_emoji():
+                await cur.execute(
+                    """
+                    UPDATE emojis_custom
+                    SET Uses = Uses - 1
+                    WHERE GuildID = (?)
+                    AND EmojiID = (?);
+                    """,
+                    [guild_id, emoji.id],
+                )
+            else:
+                await cur.execute(
+                    """
+                    UPDATE emojis_default
+                    SET Uses = Uses - 1
+                    WHERE GuildID = (?)
+                    AND Name = (?);
+                    """,
+                    [guild_id, emoji.name],
+                )
         await self.db.commit()

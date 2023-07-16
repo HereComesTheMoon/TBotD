@@ -87,6 +87,7 @@ def in_dms(msg: discord.Message) -> bool:
 
 
 async def initialise_database(location: str) -> Connection:
+    """Columns CamelCase, Tables snake_case"""
     if os.path.isfile(location):
         return await connect(location)
 
@@ -117,14 +118,22 @@ async def initialise_database(location: str) -> Connection:
             """
             CREATE TABLE 
             IF NOT EXISTS 
-            emojis_default (name TEXT, uses INT)
+            emojis_default (
+            GuildID INT  NOT NULL,
+            Name    TEXT NOT NULL,
+            Uses    INT  NOT NULL)
             """
         )
         await cur.execute(
             """
             CREATE TABLE 
             IF NOT EXISTS 
-            emojis_custom (emoji_id INTEGER, name TEXT, url TEXT, uses INT)
+            emojis_custom (
+            GuildID  INT  NOT NULL,
+            EmojiID  INT  NOT NULL,
+            Name     TEXT NOT NULL,
+            URL      TEXT NOT NULL,
+            Uses     INT  NOT NULL)
             """
         )
         await cur.execute(
