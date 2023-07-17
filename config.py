@@ -1,12 +1,12 @@
 import configparser
-from aiosqlite import connect, Connection
 import discord
 from discord.ext import commands
-import os
 
 config = configparser.ConfigParser()
 config.read("config.ini")
 
+DB_LOCATION = config["config"]["db_location"]
+BACKUPS_LOCATION = config["config"]["backups_location"]
 
 KEY = config["config"]["key"]
 
@@ -84,91 +84,3 @@ def in_bot_channel():
 
 def in_dms(msg: discord.Message) -> bool:
     return isinstance(msg.channel, discord.channel.DMChannel)
-
-
-async def initialise_database(location: str) -> Connection:
-    """Columns CamelCase, Tables snake_case"""
-    if os.path.isfile(location):
-        return await connect(location)
-
-    con = await connect(location)
-    async with con.cursor() as cur:
-        await cur.execute(
-            """
-            CREATE TABLE 
-            IF NOT EXISTS 
-            memories (userID INTEGER, postID INTEGER, postUrl TEXT, reminder TEXT, queryMade INT, queryDue INT, status TEXT);
-            """
-        )
-        await cur.execute(
-            """
-            CREATE TABLE 
-            IF NOT EXISTS 
-            remove_at (user_id INTEGER, role_id INTEGER, due INTEGER, status TEXT)
-            """
-        )
-        await cur.execute(
-            """
-            CREATE TABLE 
-            IF NOT EXISTS 
-            add_at (user_id INTEGER, role_id INTEGER, due INTEGER, status TEXT)
-            """
-        )
-        await cur.execute(
-            """
-            CREATE TABLE 
-            IF NOT EXISTS 
-            emojis_default (
-            GuildID INT  NOT NULL,
-            Name    TEXT NOT NULL,
-            Uses    INT  NOT NULL)
-            """
-        )
-        await cur.execute(
-            """
-            CREATE TABLE 
-            IF NOT EXISTS 
-            emojis_custom (
-            GuildID  INT  NOT NULL,
-            EmojiID  INT  NOT NULL,
-            Name     TEXT NOT NULL,
-            URL      TEXT NOT NULL,
-            Uses     INT  NOT NULL)
-            """
-        )
-        await cur.execute(
-            """
-            CREATE TABLE 
-            IF NOT EXISTS 
-            suggestions (date INT, userID INT, postID INT, t TEXT, b TEXT, d TEXT)
-            """
-        )
-        await cur.execute(
-            """
-            CREATE TABLE 
-            IF NOT EXISTS 
-            used_titles (date INT, t TEXT, b TEXT, d TEXT)
-            """
-        )
-        await cur.execute(
-            """
-            CREATE TABLE
-            IF NOT EXISTS
-            yuds (date INT, userID INT, postID INT, width INT, height INT, quality INT)
-            """
-        )
-        await cur.execute(
-            """
-            CREATE TABLE 
-            IF NOT EXISTS 
-            yudminders (userID INT, due INT);
-            """
-        )
-        await cur.execute(
-            """
-            CREATE TABLE 
-            IF NOT EXISTS 
-            part (userID INT, guildID INT, channelID INT, due INT, status TEXT);
-            """
-        )
-    return con

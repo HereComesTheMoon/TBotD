@@ -18,6 +18,7 @@ import threadwatch
 import timeywimey
 import yud
 import tbdtools
+import db
 from config import (
     BLUE_PORTAL,
     CATHEARTS,
@@ -26,8 +27,9 @@ from config import (
     DENIED,
     FLUSHED,
     IDGI,
-    initialise_database,
     KEY,
+    DB_LOCATION,
+    BACKUPS_LOCATION,
     LOAD_EMOJICOUNT,
     LOAD_FIXTWITTER,
     LOAD_MODERATION,
@@ -57,17 +59,13 @@ TBotD = commands.Bot(
     command_prefix="!", activity=activity, intents=intents, status=discord.Status.online
 )
 
-# General issues with the code:
-# The way config.ini imports are handled is inconsistent
-
 
 @TBotD.event
 async def on_ready():
     print("Ready!")
     print(time.strftime("%b %d %Y %H:%M:%S", time.localtime()))
-    connection: aiosqlite.Connection = await initialise_database("./db/db.db")
-
-    connection.row_factory = aiosqlite.Row
+    db.backup(DB_LOCATION, BACKUPS_LOCATION)
+    connection: aiosqlite.Connection = await db.get_database(DB_LOCATION)
 
     tbd = TBotD.get_guild(SERVER_ID)
     assert tbd is not None
