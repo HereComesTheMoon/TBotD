@@ -7,7 +7,7 @@ import discord
 from discord.ext import commands
 
 import botlog as bl
-import db
+import emojicount
 import fixtwitter
 import moderation
 import ownertools
@@ -17,6 +17,8 @@ import temproles
 import threadwatch
 import timeywimey
 import yud
+import tbdtools
+import db
 from config import (
     BLUE_PORTAL,
     CATHEARTS,
@@ -25,9 +27,10 @@ from config import (
     DENIED,
     FLUSHED,
     IDGI,
-    initialise_database,
     KEY,
-    LOAD_DB,
+    DB_LOCATION,
+    BACKUPS_LOCATION,
+    LOAD_EMOJICOUNT,
     LOAD_FIXTWITTER,
     LOAD_MODERATION,
     LOAD_OWNERTOOLS,
@@ -36,6 +39,7 @@ from config import (
     LOAD_TEMPROLES,
     LOAD_THREADWATCH,
     LOAD_YUD,
+    LOAD_TBDTOOLS,
     LOGGER_CHANNEL,
     ORANGE_PORTAL,
     PLEADING,
@@ -55,17 +59,14 @@ TBotD = commands.Bot(
     command_prefix="!", activity=activity, intents=intents, status=discord.Status.online
 )
 
-# General issues with the code:
-# The way config.ini imports are handled is inconsistent
-
 
 @TBotD.event
 async def on_ready():
     print("Ready!")
     print(time.strftime("%b %d %Y %H:%M:%S", time.localtime()))
-    connection: aiosqlite.Connection = await initialise_database("./db/db.db")
 
-    connection.row_factory = aiosqlite.Row
+    db.backup(DB_LOCATION, BACKUPS_LOCATION)
+    connection: aiosqlite.Connection = await db.get_database(DB_LOCATION)
 
     tbd = TBotD.get_guild(SERVER_ID)
     assert tbd is not None
@@ -78,9 +79,12 @@ async def on_ready():
     # !remindme
     if LOAD_REMINDERS:
         await TBotD.add_cog(reminders.Reminders(TBotD, connection))
-    # Store "TBD" title suggestions, and used emoji status (for no real reason)
-    if LOAD_DB:
-        await TBotD.add_cog(db.Database(TBotD, connection))
+    # Counts the number of reacted emojis
+    if LOAD_EMOJICOUNT:
+        await TBotD.add_cog(emojicount.EmojiCount(TBotD, connection))
+    # Keeps track of TBD title suggestions
+    if LOAD_TBDTOOLS:
+        await TBotD.add_cog(tbdtools.TBDTools(TBotD, connection))
     # !cwbanme and related commands
     if LOAD_TEMPROLES:
         await TBotD.add_cog(temproles.RoleManagement(TBotD, tbd, connection))

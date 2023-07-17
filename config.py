@@ -1,12 +1,12 @@
 import configparser
-from aiosqlite import connect, Connection
 import discord
 from discord.ext import commands
-import os
 
 config = configparser.ConfigParser()
 config.read("config.ini")
 
+DB_LOCATION = config["config"]["db_location"]
+BACKUPS_LOCATION = config["config"]["backups_location"]
 
 KEY = config["config"]["key"]
 
@@ -23,7 +23,7 @@ MOD_ROLE = int(config["tbd"]["MOD_ROLE"])
 
 # Load cogs configuration
 LOAD_REMINDERS = config.getboolean("cogs", "reminders", fallback=False)
-LOAD_DB = config.getboolean("cogs", "db", fallback=False)
+LOAD_EMOJICOUNT = config.getboolean("cogs", "emojicount", fallback=False)
 LOAD_TEMPROLES = config.getboolean("cogs", "temproles", fallback=False)
 LOAD_THREADWATCH = config.getboolean("cogs", "threadwatch", fallback=False)
 LOAD_FIXTWITTER = config.getboolean("cogs", "fixtwitter", fallback=False)
@@ -31,6 +31,7 @@ LOAD_YUD = config.getboolean("cogs", "yud", fallback=False)
 LOAD_PART = config.getboolean("cogs", "part", fallback=False)
 LOAD_MODERATION = config.getboolean("cogs", "moderation", fallback=False)
 LOAD_OWNERTOOLS = config.getboolean("cogs", "ownertools", fallback=False)
+LOAD_TBDTOOLS = config.getboolean("cogs", "tbdtools", fallback=False)
 
 
 # Miscellaneous stuff, emoji and pictures. Nothing sensitive
@@ -83,82 +84,3 @@ def in_bot_channel():
 
 def in_dms(msg: discord.Message) -> bool:
     return isinstance(msg.channel, discord.channel.DMChannel)
-
-
-async def initialise_database(location: str) -> Connection:
-    if os.path.isfile(location):
-        return await connect(location)
-
-    con = await connect(location)
-    async with con.cursor() as cur:
-        await cur.execute(
-            """
-            CREATE TABLE 
-            IF NOT EXISTS 
-            memories (userID INTEGER, postID INTEGER, postUrl TEXT, reminder TEXT, queryMade INT, queryDue INT, status TEXT);
-            """
-        )
-        await cur.execute(
-            """
-            CREATE TABLE 
-            IF NOT EXISTS 
-            remove_at (user_id INTEGER, role_id INTEGER, due INTEGER, status TEXT)
-            """
-        )
-        await cur.execute(
-            """
-            CREATE TABLE 
-            IF NOT EXISTS 
-            add_at (user_id INTEGER, role_id INTEGER, due INTEGER, status TEXT)
-            """
-        )
-        await cur.execute(
-            """
-            CREATE TABLE 
-            IF NOT EXISTS 
-            emojis_default (name TEXT, uses INT)
-            """
-        )
-        await cur.execute(
-            """
-            CREATE TABLE 
-            IF NOT EXISTS 
-            emojis_custom (emoji_id INTEGER, name TEXT, url TEXT, uses INT)
-            """
-        )
-        await cur.execute(
-            """
-            CREATE TABLE 
-            IF NOT EXISTS 
-            suggestions (date INT, userID INT, postID INT, t TEXT, b TEXT, d TEXT)
-            """
-        )
-        await cur.execute(
-            """
-            CREATE TABLE 
-            IF NOT EXISTS 
-            used_titles (date INT, t TEXT, b TEXT, d TEXT)
-            """
-        )
-        await cur.execute(
-            """
-            CREATE TABLE
-            IF NOT EXISTS
-            yuds (date INT, userID INT, postID INT, width INT, height INT, quality INT)
-            """
-        )
-        await cur.execute(
-            """
-            CREATE TABLE 
-            IF NOT EXISTS 
-            yudminders (userID INT, due INT);
-            """
-        )
-        await cur.execute(
-            """
-            CREATE TABLE 
-            IF NOT EXISTS 
-            part (userID INT, guildID INT, channelID INT, due INT, status TEXT);
-            """
-        )
-    return con
