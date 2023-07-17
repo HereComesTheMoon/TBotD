@@ -3,7 +3,7 @@ import discord
 from discord.ext import commands
 
 
-class Database(commands.Cog):
+class EmojiCount(commands.Cog):
     def __init__(self, bot: commands.Bot, db: aiosqlite.Connection):
         self.bot = bot
         self.ping_priv = discord.AllowedMentions(
