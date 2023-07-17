@@ -64,6 +64,7 @@ TBotD = commands.Bot(
 async def on_ready():
     print("Ready!")
     print(time.strftime("%b %d %Y %H:%M:%S", time.localtime()))
+
     db.backup(DB_LOCATION, BACKUPS_LOCATION)
     connection: aiosqlite.Connection = await db.get_database(DB_LOCATION)
 

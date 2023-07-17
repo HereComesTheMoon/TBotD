@@ -110,19 +110,19 @@ class OwnerTools(commands.Cog, name="Tools"):
         data.append(f"There are {result} reminders waiting to be triggered!")
 
         cur = await self.db.cursor()
-        await cur.execute("""SELECT SUM(uses) AS count FROM emojis_default""")
+        await cur.execute("""SELECT SUM(Uses) AS Count FROM emojis_default""")
         result = await cur.fetchone()
         assert result is not None
-        result = result["count"]
+        result = result["Count"]
         data.append(
             f"I have counted a total of {result} reactions with default emojis!"
         )
 
         cur = await self.db.cursor()
-        await cur.execute("""SELECT SUM(uses) AS count FROM emojis_custom""")
+        await cur.execute("""SELECT SUM(Uses) AS Count FROM emojis_custom""")
         result = await cur.fetchone()
         assert result is not None
-        result = result["count"]
+        result = result["Count"]
         data.append(f"I have counted a total of {result} reactions with custom emojis!")
 
         cur = await self.db.cursor()
@@ -130,7 +130,7 @@ class OwnerTools(commands.Cog, name="Tools"):
         await cur.execute(
             f"""
             SELECT * FROM emojis_custom 
-            WHERE emoji_id IN({','.join(['?'] * len(emojis))})
+            WHERE EmojiID IN({','.join(['?'] * len(emojis))})
             ORDER BY RANDOM() 
             LIMIT 3
             """,
@@ -139,7 +139,7 @@ class OwnerTools(commands.Cog, name="Tools"):
         result = await cur.fetchall()
         for row in result:
             data.append(
-                f"<:{row['name']}:{row['emoji_id']}> has been used {row['uses']} times!"
+                f"<:{row['Name']}:{row['EmojiID']}> has been used {row['Uses']} times!"
             )
 
         poast = "Loading statistics... \n" + "\n".join(data)
@@ -152,17 +152,15 @@ class OwnerTools(commands.Cog, name="Tools"):
         cur = await self.db.cursor()
         await cur.execute(
             f"""
-            SELECT name, emoji_id, uses FROM emojis_custom
-            WHERE emoji_id IN({','.join(['?'] * len(emojis))})
-            ORDER BY uses ASC
+            SELECT Name, EmojiID, Uses FROM emojis_custom
+            WHERE EmojiID IN({','.join(['?'] * len(emojis))})
+            ORDER BY Uses ASC
             """,
             emojis,
         )
         answer = "Here's a table of least-used emojis:"
 
-        result = [
-            (name, emoji_id, uses) for name, emoji_id, uses in await cur.fetchall()
-        ]
+        result = [(Name, EmojiID, Uses) for Name, EmojiID, Uses in await cur.fetchall()]
         used_check = {x[1] for x in result}
         not_used = [
             (emoji.name, emoji.id, 0)
