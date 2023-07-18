@@ -7,7 +7,7 @@ import botlog as bl
 from PIL import Image
 import datetime as dt
 from zoneinfo import ZoneInfo
-from config import in_dms, CATPOUT, CATSCREAM, LOAD_YUD
+from config import CATPOUT, CATSCREAM, LOAD_YUD
 from tabulate import tabulate
 import random
 import asyncio
@@ -171,7 +171,7 @@ class Yud(commands.Cog):
     async def yud(self, ctx: commands.Context, *, post: str = ""):
         """yud"""
         bl.log(self.yud, ctx)
-        if in_dms(ctx):
+        if isinstance(ctx.channel, discord.channel.DMChannel):
             yud = await YudImage().get_discord_file()
             await ctx.reply(allowed_mentions=self.ping_priv, file=yud)
             return

@@ -14,7 +14,6 @@ SERVER_ID = int(config["tbd"]["SERVER"])
 
 THREAD_WATCH_CHANNEL = int(config["tbd"]["THREAD_WATCH_CHANNEL"])
 LOGGER_CHANNEL = int(config["tbd"]["LOGGER_CHANNEL"])
-BOT_CHANNEL = int(config["tbd"]["BOT_CHANNEL"])
 
 CW_BAN_ROLE = int(config["tbd"]["CW_BAN_ROLE"])
 BLINDED_ROLE = int(config["tbd"]["BLINDED_ROLE"])
@@ -69,18 +68,3 @@ def on_tbd():
         return False
 
     return commands.check(predicate)
-
-
-def in_bot_channel():
-    def predicate(ctx) -> bool:
-        guild = ctx.guild
-        if guild:
-            # breaks if on not-TBD server, like everything else
-            return ctx.channel.id == BOT_CHANNEL
-        return False
-
-    return commands.check(predicate)
-
-
-def in_dms(msg: discord.Message) -> bool:
-    return isinstance(msg.channel, discord.channel.DMChannel)
