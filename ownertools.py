@@ -5,7 +5,9 @@ from aiosqlite import Connection
 
 from tabulate import tabulate
 
-from config import CATSCREAM, IDGI
+from config import CATSCREAM, IDGI, DB_LOCATION, BACKUPS_LOCATION
+
+from db import backup
 
 
 class OwnerTools(commands.Cog, name="Tools"):
@@ -55,8 +57,9 @@ class OwnerTools(commands.Cog, name="Tools"):
         bl.log(self.kill, ctx)
         print("Shutdown command received.")
         await ctx.message.add_reaction(CATSCREAM)
-        await self.db.close()
         await self.bot.close()
+        backup(DB_LOCATION, BACKUPS_LOCATION)
+        await self.db.close()
 
     @commands.Cog.listener()
     async def on_member_join(self, member: discord.Member):

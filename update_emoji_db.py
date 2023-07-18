@@ -18,14 +18,13 @@ def main():
     #         print("\t", f)
 
     # return
-    
-    # shutil.copyfile(DB_LOCATION, backup_path)
 
+    # shutil.copyfile(DB_LOCATION, backup_path)
 
     with sqlite3.connect(DB_LOCATION) as con:
         cur = con.cursor()
         cur.executescript(
-            f"""
+            """
 		    ALTER TABLE
 		    emojis_default RENAME TO temp;
 
@@ -49,7 +48,7 @@ def main():
 
         cur = con.cursor()
         cur.executescript(
-            f"""
+            """
 		    ALTER TABLE
 		    emojis_custom RENAME TO temp;
 

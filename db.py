@@ -6,6 +6,7 @@ from pathlib import Path
 import sqlite3
 
 from config import DB_LOCATION, BACKUPS_LOCATION
+from botlog import logger
 
 
 async def get_database(location: str) -> aiosqlite.Connection:
@@ -44,6 +45,7 @@ def check_backups(backup_folder: str):
 
 
 def backup(db_location: str, backup_folder: str):
+    logger.info("Backup start.")
     backup_folder = Path(backup_folder)
     if not os.path.exists(backup_folder):
         print("No backup folder found, creating...")
@@ -56,6 +58,7 @@ def backup(db_location: str, backup_folder: str):
         print("Last backup was less than one second ago? Aborting.")
         return
     print(f"Creating new backup file: {new_backup}")
+    logger.info(f"Creating backup {new_backup}.")
 
     new_con = sqlite3.connect(new_backup)
     con = sqlite3.connect(Path(db_location))
@@ -66,6 +69,7 @@ def backup(db_location: str, backup_folder: str):
 
     con.close()
     new_con.close()
+    logger.info("Backup done.")
 
 
 def initialise_database(location: str):
