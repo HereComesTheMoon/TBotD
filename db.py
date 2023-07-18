@@ -101,9 +101,11 @@ def initialise_database(location: str):
             CREATE TABLE 
             IF NOT EXISTS 
             emojis_default (
-            GuildID INT  NOT NULL,
-            Name    TEXT NOT NULL,
-            Uses    INT  NOT NULL)
+                GuildID INT  NOT NULL,
+                Name    TEXT NOT NULL,
+                Uses    INT  NOT NULL,
+                UNIQUE (GuildID, Name)
+            );
             """
         )
         con.execute(
@@ -111,11 +113,13 @@ def initialise_database(location: str):
             CREATE TABLE 
             IF NOT EXISTS 
             emojis_custom (
-            GuildID  INT  NOT NULL,
-            EmojiID  INT  NOT NULL,
-            Name     TEXT NOT NULL,
-            URL      TEXT NOT NULL,
-            Uses     INT  NOT NULL)
+                GuildID  INT  NOT NULL,
+                EmojiID  INT  NOT NULL,
+                Name     TEXT NOT NULL,
+                URL      TEXT NOT NULL,
+                Uses     INT  NOT NULL,
+                UNIQUE (GuildID, EmojiID)
+            );
             """
         )
         con.execute(
