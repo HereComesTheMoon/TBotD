@@ -6,10 +6,21 @@ from config import SERVER_ID, DB_LOCATION, BACKUPS_LOCATION
 
 
 def main():
-    os.mkdir(BACKUPS_LOCATION)
-    backup_path = BACKUPS_LOCATION + "db_backup.db"
-    assert not os.path.exists(backup_path)
-    shutil.copyfile(DB_LOCATION, backup_path)
+    # os.makedirs(BACKUPS_LOCATION)
+    # backup_path = BACKUPS_LOCATION + "db_backup.db"
+    # assert not os.path.exists(backup_path)
+
+    # for root, dirs, files in os.walk("./"):
+    #     files = [f for f in files if not f[0] == '.']
+    #     dirs[:] = [d for d in dirs if d[0] != '.' and d[:4] != "venv"]
+    #     print(root)
+    #     for f in files:
+    #         print("\t", f)
+
+    # return
+    
+    # shutil.copyfile(DB_LOCATION, backup_path)
+
 
     with sqlite3.connect(DB_LOCATION) as con:
         cur = con.cursor()
@@ -21,12 +32,14 @@ def main():
 		    CREATE TABLE 
 		    IF NOT EXISTS 
 		    emojis_default (
-		    GuildID INT  NOT NULL,
-		    Name    TEXT NOT NULL,
-		    Uses    INT  NOT NULL);
+    		    GuildID INT  NOT NULL,
+    		    Name    TEXT NOT NULL,
+    		    Uses    INT  NOT NULL,
+                UNIQUE (GuildID, Name)
+            );
 
 		    INSERT INTO emojis_default(GuildID, Name, Uses)
-		    SELECT {SERVER_ID}, name, uses
+		    SELECT GuildID, Name, Uses
 		    FROM temp;
 
 		    DROP TABLE temp;
@@ -43,14 +56,16 @@ def main():
             CREATE TABLE 
             IF NOT EXISTS 
             emojis_custom (
-            GuildID  INT  NOT NULL,
-            EmojiID  INT  NOT NULL,
-            Name     TEXT NOT NULL,
-            URL      TEXT NOT NULL,
-            Uses     INT  NOT NULL);
+                GuildID  INT  NOT NULL,
+                EmojiID  INT  NOT NULL,
+                Name     TEXT NOT NULL,
+                URL      TEXT NOT NULL,
+                Uses     INT  NOT NULL,
+                UNIQUE(GuildID, EmojiID)
+            );
 
 		    INSERT INTO emojis_custom(GuildID, EmojiID, Name, URL, Uses)
-		    SELECT {SERVER_ID}, emoji_id, name, url, uses
+		    SELECT GuildID, EmojiID, Name, URL, Uses
 		    FROM temp;
 
 		    DROP TABLE temp;
