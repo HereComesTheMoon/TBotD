@@ -65,14 +65,25 @@ async def on_ready():
     print("Ready!")
     print(time.strftime("%b %d %Y %H:%M:%S", time.localtime()))
 
-    db.backup(DB_LOCATION, BACKUPS_LOCATION)
-    connection: aiosqlite.Connection = await db.get_database(DB_LOCATION)
+    try:
+        db.backup(DB_LOCATION, BACKUPS_LOCATION)
+        connection: aiosqlite.Connection = await db.get_database(DB_LOCATION)
+    except FileNotFoundError as e:
+        bl.error_log.exception(e)
+        print(f"{e}")
+        print(
+            "Database file not found. Initialise via `db.py` or move to right folder."
+        )
+        await TBotD.close()
+    except Exception as e:
+        bl.error_log.exception(e)
+        print(f"{e}")
+        await TBotD.close()
 
     tbd = TBotD.get_guild(SERVER_ID)
     assert tbd is not None
 
     app = await TBotD.application_info()
-    # print(f"{app}")
     TBotD.owner_id = app.owner.id
 
     # Cogs:
