@@ -1,6 +1,5 @@
 import discord
 from discord.ext import tasks, commands
-import asyncio
 import aiosqlite
 import botlog as bl
 import timeywimey
@@ -30,7 +29,13 @@ class Part(commands.Cog, name="Part"):
         guildID = ctx.guild.id
         channelID = ctx.channel.id
 
-        await ctx.channel.set_permissions(member, read_messages=False)
+        try:
+            await ctx.channel.set_permissions(member, read_messages=False)
+        except AttributeError:
+            await ctx.reply(
+                "You are probably trying to use this command in a thread. Threads inherit their permissions from their parent channel, so this doesn't work. You can try leaving the thread instead."
+            )
+            return
 
         cur = await self.db.cursor()
         await cur.execute(
@@ -38,10 +43,9 @@ class Part(commands.Cog, name="Part"):
             INSERT INTO part
             VALUES (?, ?, ?, ?, ?);
             """,
-            (userID, guildID, channelID, due, "Future"),
+            (userID, guildID, channelID, due, None),
         )
         await self.db.commit()
-        await self.queue_unparts()
 
     @commands.command()
     @commands.guild_only()
@@ -49,107 +53,62 @@ class Part(commands.Cog, name="Part"):
     async def rejoin(self, ctx: commands.Context, *, post: str = ""):
         """Rejoins all !part-ed channels."""
         bl.log(self.rejoin, ctx)
-        guild: discord.Guild = ctx.guild
-        member: discord.Member = guild.get_member(ctx.author.id)
 
-        cur = await self.db.cursor()
-        await cur.execute(
+        tasks = await self.db.execute(
             """
-            SELECT channelID FROM part
-            WHERE userID = (?)
-            AND guildID = (?)
-            AND status in ('Present', 'Future');
+            SELECT UserID, GuildID, ChannelID FROM part
+            WHERE UserID = (?)
+            AND GuildID = (?)
+            AND Error IS NOT NULL;
             """,
-            (ctx.author.id, guild.id),
+            (ctx.author.id, ctx.guild.id),
         )
-        channels = await cur.fetchall()
-        for row in channels:
-            channel: discord.Channel = guild.get_channel(row["channelID"])
-            await channel.set_permissions(member, overwrite=None)
-
-        cur = await self.db.cursor()
-        await cur.execute(
-            """
-            UPDATE part
-            SET status = 'Past'
-            WHERE userID = (?)
-            AND guildID = (?);
-            """,
-            (ctx.author.id, guild.id),
-        )
-        await self.db.commit()
+        for row in await tasks.fetchall():
+            await self.unpart(row)
 
     async def unpart(self, row: aiosqlite.Row):
-        guild: discord.Guild = self.bot.get_guild(row["guildID"])
-        channel: discord.Channel = guild.get_channel(row["channelID"])
-        member: discord.Member = guild.get_member(row["userID"])
-        delay = row["due"] - timeywimey.right_now()
-        cur = await self.db.cursor()
-        await cur.execute(
-            """
-            UPDATE part
-            SET status = 'Present'
-            WHERE oid = (?)
-            """,
-            [row["rowid"]],
-        )
-        await self.db.commit()
-
-        await asyncio.sleep(max(delay, 1))
-
-        cur = await self.db.cursor()
         try:
+            guild: discord.Guild = self.bot.get_guild(row["GuildID"])
+            channel: discord.Channel = guild.get_channel(row["ChannelID"])
+            member: discord.Member = guild.get_member(row["UserID"])
+
             await channel.set_permissions(member, overwrite=None)
-        except discord.HTTPException:
-            bl.error_log.exception("Bot unparting permission change error!")
-            await cur.execute(
+        except discord.DiscordException as e:
+            bl.error_log.exception(e)
+            await self.db.execute(
                 """
                 UPDATE part
-                SET status = 'Error'
-                WHERE oid = (?)
+                SET Error = (?)
+                WHERE rowid = (?);
+                """,
+                [repr(e), row["rowid"]],
+            )
+        else:
+            await self.db.execute(
+                """
+                DELETE FROM part
+                WHERE rowid = (?);
                 """,
                 [row["rowid"]],
             )
-            await self.db.commit()
-            return
-
-        await cur.execute(
-            """
-            UPDATE part
-            SET status = 'Past'
-            WHERE oid = (?)
-            """,
-            [row["rowid"]],
-        )
         await self.db.commit()
 
-    @tasks.loop(minutes=5)
+    @tasks.loop(seconds=1)
     async def loop(self):
-        await self.queue_unparts()
+        now = timeywimey.right_now() + 1
+        tasks = await self.db.execute(
+            """
+            SELECT rowid, *
+            FROM part
+            WHERE Due <= (?)
+            AND Error IS NULL;
+            """,
+            [now],
+        )
+
+        for row in await tasks.fetchall():
+            await self.unpart(row)
 
     @loop.before_loop
     async def before_loop(self):
         await self.bot.wait_until_ready()
-        part = await self.get_rejoins()
-        task_stack = [asyncio.create_task(self.unpart(x)) for x in part]
-        if task_stack:
-            await asyncio.wait(task_stack)
-
-    async def queue_unparts(self):
-        part = await self.get_rejoins()
-        task_stack = [asyncio.create_task(self.unpart(x)) for x in part]
-        if task_stack:
-            await asyncio.wait(task_stack)
-
-    async def get_rejoins(self):
-        cur = await self.db.cursor()
-        await cur.execute(
-            """
-            SELECT oid, *
-            FROM part
-            WHERE due <= (?)
-            AND status LIKE 'Future'
-            """,
-            [timeywimey.right_now() + 360 + 1],
-        )
-        return await cur.fetchall()

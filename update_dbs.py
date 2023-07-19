@@ -1,26 +1,12 @@
 import sqlite3
-import shutil
-import os
 
-from config import SERVER_ID, DB_LOCATION, BACKUPS_LOCATION
+# import shutil
+# import os
+
+from config import DB_LOCATION
 
 
-def main():
-    # os.makedirs(BACKUPS_LOCATION)
-    # backup_path = BACKUPS_LOCATION + "db_backup.db"
-    # assert not os.path.exists(backup_path)
-
-    # for root, dirs, files in os.walk("./"):
-    #     files = [f for f in files if not f[0] == '.']
-    #     dirs[:] = [d for d in dirs if d[0] != '.' and d[:4] != "venv"]
-    #     print(root)
-    #     for f in files:
-    #         print("\t", f)
-
-    # return
-
-    # shutil.copyfile(DB_LOCATION, backup_path)
-
+def update_emoji_db():
     with sqlite3.connect(DB_LOCATION) as con:
         cur = con.cursor()
         cur.executescript(
@@ -95,5 +81,34 @@ def main():
     con.close()
 
 
+def update_part_db():
+    with sqlite3.connect(DB_LOCATION) as con:
+        cur = con.cursor()
+        cur.executescript(
+            """
+		    ALTER TABLE
+		    part RENAME TO temp;
+
+            CREATE TABLE 
+            IF NOT EXISTS 
+            part (
+                UserID    INT  NOT NULL,
+                GuildID   INT  NOT NULL,
+                ChannelID INT  NOT NULL,
+                Due       INT  NOT NULL,
+                Error     TEXT
+            );
+
+		    INSERT INTO part(UserID, GuildID, ChannelID, Due, Status)
+		    SELECT userID, guildID, channelID, due, NULL
+		    FROM temp
+            WHERE Status NOT LIKE "Past";
+
+		    DROP TABLE temp;
+		    """
+        )
+        cur.close()
+
+
 if __name__ == "__main__":
-    main()
+    update_part_db()

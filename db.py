@@ -46,10 +46,12 @@ def check_backups(backup_folder: str):
 
 def backup(db_location: str, backup_folder: str):
     logger.info("Backup start.")
+    if not os.path.isfile(db_location):
+        raise FileNotFoundError
     backup_folder = Path(backup_folder)
     if not os.path.exists(backup_folder):
         print("No backup folder found, creating...")
-        os.mkdir(backup_folder)
+        os.makedirs(backup_folder)
 
     now = datetime.now().isoformat(timespec="seconds")
 
@@ -78,6 +80,7 @@ def initialise_database(location: str):
     if os.path.isfile(location):
         raise FileExistsError
 
+    os.makedirs(location.parent)
     with sqlite3.connect(location) as con:
         con.execute(
             """
@@ -158,7 +161,13 @@ def initialise_database(location: str):
             """
             CREATE TABLE 
             IF NOT EXISTS 
-            part (userID INT, guildID INT, channelID INT, due INT, status TEXT);
+            part (
+                UserID    INT  NOT NULL,
+                GuildID   INT  NOT NULL,
+                ChannelID INT  NOT NULL,
+                Due       INT  NOT NULL,
+                Error     TEXT
+            );
             """
         )
     con.commit()
@@ -166,6 +175,9 @@ def initialise_database(location: str):
 
 
 if __name__ == "__main__":
-    initialise_database(DB_LOCATION)
+    try:
+        initialise_database(DB_LOCATION)
+    except FileExistsError:
+        print("Database already exists.")
     backup(DB_LOCATION, BACKUPS_LOCATION)
     check_backups(BACKUPS_LOCATION)
