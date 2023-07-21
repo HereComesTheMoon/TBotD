@@ -58,9 +58,16 @@ class OwnerTools(commands.Cog, name="Tools"):
         bl.log(self.kill, ctx)
         print("Shutdown command received.")
         await ctx.message.add_reaction(CATSCREAM)
-        await self.bot.close()
-        backup(DB_LOCATION, BACKUPS_LOCATION)
-        await self.db.close()
+        try:
+            await self.bot.close()
+            await self.db.close()
+            backup(DB_LOCATION, BACKUPS_LOCATION)
+        except Exception as e:
+            print(e)
+            bl.error_log.exception(e)
+        finally:
+            print("Exiting now.")
+            exit(0)
 
     @commands.Cog.listener()
     async def on_member_join(self, member: discord.Member):
