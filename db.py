@@ -45,7 +45,7 @@ def check_backups(backup_folder: str):
 
 
 def backup(db_location: str, backup_folder: str):
-    logger.info("Backup start.")
+    print("Backup start.")
     if not os.path.isfile(db_location):
         raise FileNotFoundError
     backup_folder = Path(backup_folder)
@@ -60,18 +60,16 @@ def backup(db_location: str, backup_folder: str):
         print("Last backup was less than one second ago? Aborting.")
         return
     print(f"Creating new backup file: {new_backup}")
-    logger.info(f"Creating backup {new_backup}.")
 
     new_con = sqlite3.connect(new_backup)
-    con = sqlite3.connect(Path(db_location))
+    con = sqlite3.connect(db_location)
 
     print("Backing up database...")
     con.backup(new_con)
-    print("Backup done.")
 
     con.close()
     new_con.close()
-    logger.info("Backup done.")
+    print("Backup done.")
 
 
 def initialise_database(location: str):

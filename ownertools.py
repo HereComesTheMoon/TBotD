@@ -59,7 +59,7 @@ class OwnerTools(commands.Cog, name="Tools"):
         print("Shutdown command received.")
         await ctx.message.add_reaction(CATSCREAM)
         try:
-            await self.bot.close()
+            await self.bot.close()  # If db.close() happens before bot.close() then the program does not terminate correctly, and the docker container keeps running
             await self.db.close()
             backup(DB_LOCATION, BACKUPS_LOCATION)
         except Exception as e:
