@@ -9,18 +9,19 @@ from config import CATSCREAM, IDGI, DB_LOCATION, BACKUPS_LOCATION
 
 from db import backup
 
+from collections import deque
+import os
+
 
 class OwnerTools(commands.Cog, name="Tools"):
     def __init__(
         self, bot: commands.Bot, db: Connection, tbd: discord.Guild, went_online_at: int
     ):
         self.bot = bot
-
         self.db = db
-
         self.tbd = tbd
-
         self.went_online_at = went_online_at
+        self.last_error_print_time = 0
 
     @commands.Cog.listener()
     async def on_message(self, msg: discord.Message):
@@ -227,3 +228,24 @@ class OwnerTools(commands.Cog, name="Tools"):
             )
             return
         await ctx.reply(content=post + "\n```" + tabs + "```")
+
+    @commands.command(hidden=True)
+    @commands.is_owner()
+    async def errors(self, ctx: commands.Context):
+        bl.log(self.errors, ctx)
+
+        errors_changed_time = int(os.path.getmtime("./logs/errors.log"))
+        if errors_changed_time <= self.last_error_print_time:
+            await ctx.reply(
+                f"There have been no new errors. ./logs/errors.log has been last modified at <t:{errors_changed_time}:F>, ie <t:{errors_changed_time}:R>."
+            )
+        else:
+            self.last_error_print_time = errors_changed_time
+            q = deque()
+            with open("./logs/errors.log", "r") as f:
+                while line := f.readline():
+                    q.append(line)
+                    if 30 <= len(q):
+                        q.popleft()
+            errors = "".join(q)
+            await ctx.reply(f"There have been new errors. ```\n{errors}```")
