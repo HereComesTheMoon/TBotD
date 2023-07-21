@@ -192,12 +192,31 @@ class OwnerTools(commands.Cog, name="Tools"):
 
     @commands.command(hidden=True)
     @commands.is_owner()
-    async def printdbs(self, ctx: commands.Context):
-        bl.log(self.printdbs, ctx)
+    async def dbs(self, ctx: commands.Context):
+        bl.log(self.dbs, ctx)
         cur = await self.db.cursor()
-        await cur.execute("""SELECT * from sqlite_master""")
-        tabs = tabulate([tuple(x) for x in await cur.fetchall()])
-        await ctx.reply(content="```" + tabs + "```")
+        await cur.execute(
+            """
+            SELECT name, sql from sqlite_master
+            WHERE type = 'table'
+            """
+        )
+        results = []
+        for row in await cur.fetchall():
+            name = row["name"]
+            sql = row["sql"]
+            counter = await self.db.execute(
+                f"""SELECT COUNT(*) as Count FROM {name};"""
+            )
+            count = (await counter.fetchone())["Count"]
+            results.append(
+                f"\nTable: {name}. Number of rows: {count}.\n```\n{sql}\n```"
+            )
+            if 2000 <= sum(map(len, results)):
+                await ctx.reply("".join(results[: len(results) - 1]))
+                results = results[len(results) - 1 :]
+        if results:
+            await ctx.reply("".join(results))
 
     @commands.command(hidden=True)
     @commands.is_owner()
