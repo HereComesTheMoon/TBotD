@@ -2,8 +2,7 @@ import aiosqlite
 import discord
 from discord.ext import commands
 import timeywimey
-
-from config import on_tbd
+import re
 
 
 class TBDTools(commands.Cog):
@@ -15,61 +14,34 @@ class TBDTools(commands.Cog):
         self.db = db
 
     @commands.Cog.listener()
-    @on_tbd()
     async def on_message(self, msg: discord.Message):
-        # TODO: Also strip all symbols when checking whether a word fits the TBD scheme
+        # TODO: Also accept suggestions such as 'to-be$determined'
         if msg.author.bot:
-            return 0
-        words = msg.content.split()
-        if len(words) >= 3:
-            to, be, determined = words[0], words[1], words[2]
-            if (
-                to[0].lower() == "t"
-                and be[0].lower() == "b"
-                and determined[0].lower() == "d"
-            ):
-                now = timeywimey.right_now()
-                await self.add_tbd_suggestion(
-                    now, msg.author.id, msg.id, to, be, determined
-                )
+            return
+        pattern = r"\b[tT]\w*\s+[bB]\w*\s+[dD]\w*\b"
+
+        cur = await self.db.cursor()
+        await cur.executemany(
+            """
+            INSERT INTO suggestions(Suggestion)
+            VALUES (?);
+            """,
+            ((match,) for match in re.findall(pattern, msg.content)),
+        )
+        await cur.close()
+        await self.db.commit()
 
     @commands.Cog.listener()
     async def on_guild_update(self, before: discord.Guild, after: discord.Guild):
-        if before.name != after.name:
-            words = after.name.split()
-            if len(words) >= 3:
-                to, be, determined = words[0], words[1], words[2]
-                if (
-                    to[0].lower() == "t"
-                    and be[0].lower() == "b"
-                    and determined[0].lower() == "d"
-                ):
-                    await self.add_tbd_used_title(
-                        timeywimey.right_now(), to, be, determined
-                    )
-
-    async def add_tbd_suggestion(
-        self, date: int, user_id: int, post_id: int, to: str, be: str, determined: str
-    ):
-        # TABLE suggestions (date INT, userID INT, postID INT, t TEXT, b TEXT, d TEXT)
+        if before.name == after.name:
+            return
         cur = await self.db.cursor()
         await cur.execute(
             """
-            INSERT INTO suggestions 
-            VALUES (?,?,?,?,?,?)
+            INSERT INTO used_titles(GuildID, Date, Title)
+            VALUES (?,?,?);
             """,
-            [date, user_id, post_id, to, be, determined],
+            [after.id, timeywimey.right_now(), after.name],
         )
-        await self.db.commit()
-
-    async def add_tbd_used_title(self, date: int, to: str, be: str, determined: str):
-        # TABLE used_title (date INT, t TEXT, b TEXT, d TEXT)
-        cur = await self.db.cursor()
-        await cur.execute(
-            """
-            INSERT INTO used_titles 
-            VALUES (?,?,?,?)
-            """,
-            [date, to, be, determined],
-        )
+        await cur.close()
         await self.db.commit()

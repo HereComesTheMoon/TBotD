@@ -131,14 +131,20 @@ def initialise_database(location: str):
             """
             CREATE TABLE 
             IF NOT EXISTS 
-            suggestions (date INT, userID INT, postID INT, t TEXT, b TEXT, d TEXT)
+            suggestions (
+                Suggestion TEXT NOT NULL
+            );
             """
         )
         con.execute(
             """
             CREATE TABLE 
             IF NOT EXISTS 
-            used_titles (date INT, t TEXT, b TEXT, d TEXT)
+            used_titles (
+                GuildID INT  NOT NULL,
+                Date    INT  NOT NULL,
+                Title   TEXT NOT NULL
+            );
             """
         )
         con.execute(
