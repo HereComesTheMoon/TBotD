@@ -7,7 +7,7 @@ import discord
 from discord.ext import commands
 
 import botlog as bl
-import emojicount
+import counter
 import fixtwitter
 import moderation
 import ownertools
@@ -30,7 +30,7 @@ from config import (
     KEY,
     DB_LOCATION,
     BACKUPS_LOCATION,
-    LOAD_EMOJICOUNT,
+    LOAD_COUNTER,
     LOAD_FIXTWITTER,
     LOAD_MODERATION,
     LOAD_OWNERTOOLS,
@@ -91,8 +91,8 @@ async def on_ready():
     if LOAD_REMINDERS:
         await TBotD.add_cog(reminders.Reminders(TBotD, connection))
     # Counts the number of reacted emojis
-    if LOAD_EMOJICOUNT:
-        await TBotD.add_cog(emojicount.EmojiCount(TBotD, connection))
+    if LOAD_COUNTER:
+        await TBotD.add_cog(counter.Counter(TBotD, connection))
     # Keeps track of TBD title suggestions
     if LOAD_TBDTOOLS:
         await TBotD.add_cog(tbdtools.TBDTools(TBotD, connection))

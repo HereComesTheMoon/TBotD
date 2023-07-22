@@ -22,7 +22,7 @@ MOD_ROLE = int(config["tbd"]["MOD_ROLE"])
 
 # Load cogs configuration
 LOAD_REMINDERS = config.getboolean("cogs", "reminders", fallback=False)
-LOAD_EMOJICOUNT = config.getboolean("cogs", "emojicount", fallback=False)
+LOAD_COUNTER = config.getboolean("cogs", "counter", fallback=False)
 LOAD_TEMPROLES = config.getboolean("cogs", "temproles", fallback=False)
 LOAD_THREADWATCH = config.getboolean("cogs", "threadwatch", fallback=False)
 LOAD_FIXTWITTER = config.getboolean("cogs", "fixtwitter", fallback=False)
