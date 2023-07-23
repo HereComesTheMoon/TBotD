@@ -18,15 +18,41 @@ class TBDTools(commands.Cog):
             raise "Part is not loaded. !cwbanme won't work"
 
     @commands.command()
-    @commands.guild_only()
     async def blindme(self, ctx: commands.Context, *, post: str = ""):
-        """Blind yourself for a set amount of time. eg. !blindme 2 hours"""
+        """Blind yourself from a server for a set amount of time. eg. !blindme 2 hours"""
         bl.log(self.blindme, ctx)
-        member = ctx.author
+        if ctx.guild is None:
+            await ctx.reply(
+                "This can for now only be used on a Discord server. If it's important to you that you can use it in DMs tell me, and I will fix it."
+            )
+            return
         _, due, parse_status = timeywimey.parse_time(post)
         if parse_status == 0:
             await ctx.message.add_reaction(IDGI)
             return
+
+        cog = self.bot.get_cog("Part")
+        if cog is None:
+            bl.error_log("The !part cog is not loaded, but the TBDTools cog is.")
+            await ctx.reply("Error: The !part cog is not loaded.")
+            return
+
+        member = ctx.author
+        for channel in ctx.guild.channels:
+            try:
+                await channel.set_permissions(member, read_messages=False)
+                cur = await self.db.cursor()
+                await cur.execute(
+                    """
+                    INSERT INTO part(UserID, GuildID, ChannelID, Due, Error)
+                    VALUES (?, ?, ?, ?, ?);
+                    """,
+                    (ctx.author.id, ctx.guild.id, channel.id, due, None),
+                )
+                await cur.close()
+            except discord.Forbidden:
+                pass
+        await self.db.commit()
 
     @commands.command()
     async def cwbanme(self, ctx: commands.Context, *, post: str = ""):
@@ -38,7 +64,7 @@ class TBDTools(commands.Cog):
 
         cog = self.bot.get_cog("Part")
         if cog is None:
-            bl.error_log("The !part cog is not loaded, but the TBDTools is.")
+            bl.error_log("The !part cog is not loaded, but the TBDTools cog is.")
             await ctx.reply("Error: The !part cog is not loaded.")
             return
 
