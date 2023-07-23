@@ -111,7 +111,7 @@ async def on_ready():
     # Owner tools, to kill the bot and to puppet it
     if LOAD_OWNERTOOLS:
         await TBotD.add_cog(
-            ownertools.OwnerTools(TBotD, connection, tbd, timeywimey.right_now())
+            ownertools.OwnerTools(TBotD, connection, timeywimey.right_now())
         )
 
 
