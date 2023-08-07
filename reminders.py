@@ -93,7 +93,7 @@ class Reminders(commands.Cog):
             "status": "Future",
         }
         content = f"You'll be reminded on the <t:{p['queryDue']}> of {p['reminder']}. Use ``!reminders`` to check your reminders."
-        if "," not in arg:
+        if 30 < len(arg) and "," not in arg:
             content += " Please remember to use a `,` to separate *what* you want to be reminded from *when* you want to be reminded of it. Good: `!remindme 3 days, mom's birthday 2 days`. Bad: `!remindme 3 days mom's birthday 2 days`."
         await ctx.message.reply(content, allowed_mentions=self.ping_priv)
         p["oid"] = await self.add_data(p)
