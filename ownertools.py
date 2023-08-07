@@ -14,12 +14,9 @@ import os
 
 
 class OwnerTools(commands.Cog, name="Tools"):
-    def __init__(
-        self, bot: commands.Bot, db: Connection, tbd: discord.Guild, went_online_at: int
-    ):
+    def __init__(self, bot: commands.Bot, db: Connection, went_online_at: int):
         self.bot = bot
         self.db = db
-        self.tbd = tbd
         self.went_online_at = went_online_at
         self.last_error_print_time = 0
 
@@ -59,8 +56,8 @@ class OwnerTools(commands.Cog, name="Tools"):
         print("Shutdown command received.")
         await ctx.message.add_reaction(CATSCREAM)
         try:
+            await self.bot.close()  # If db.close() happens before bot.close() then the program does not terminate correctly, and the docker container keeps running
             await self.db.close()
-            await self.bot.close()
             backup(DB_LOCATION, BACKUPS_LOCATION)
         except Exception as e:
             print(e)
@@ -88,6 +85,7 @@ class OwnerTools(commands.Cog, name="Tools"):
         )
 
     @commands.command()
+    @commands.guild_only()
     async def stats(self, ctx: commands.Context):
         """Display statistics of the server!"""
         bl.log(self.stats, ctx)
@@ -137,18 +135,16 @@ class OwnerTools(commands.Cog, name="Tools"):
         data.append(f"I have counted a total of {result} reactions with custom emojis!")
 
         cur = await self.db.cursor()
-        emojis = tuple([emoji.id for emoji in self.tbd.emojis])
+        known = set(emoji.id for emoji in ctx.guild.emojis)
         await cur.execute(
-            f"""
+            """
             SELECT * FROM emojis_custom 
-            WHERE EmojiID IN({','.join(['?'] * len(emojis))})
             ORDER BY RANDOM() 
-            LIMIT 3
-            """,
-            emojis,
+            LIMIT 20;
+            """
         )
-        result = await cur.fetchall()
-        for row in result:
+        result = [row for row in await cur.fetchall() if row["EmojiID"] in known]
+        for row in result[:3]:
             data.append(
                 f"<:{row['Name']}:{row['EmojiID']}> has been used {row['Uses']} times!"
             )
@@ -157,26 +153,27 @@ class OwnerTools(commands.Cog, name="Tools"):
         await ctx.reply(content=poast)
 
     @commands.command(hidden=True)
-    @commands.is_owner()
+    @commands.guild_only()
+    @commands.cooldown(1, 24 * 60 * 60, commands.BucketType.guild)
     async def least_used_emojis(self, ctx: commands.Context, *, post: str = ""):
-        emojis = tuple([emoji.id for emoji in self.tbd.emojis])
+        known = set([emoji.id for emoji in ctx.guild.emojis])
         cur = await self.db.cursor()
         await cur.execute(
-            f"""
+            """
             SELECT Name, EmojiID, Uses FROM emojis_custom
-            WHERE EmojiID IN({','.join(['?'] * len(emojis))})
-            ORDER BY Uses ASC
+            ORDER BY Uses ASC;
             """,
-            emojis,
         )
         answer = "Here's a table of least-used emojis:"
 
-        result = [(Name, EmojiID, Uses) for Name, EmojiID, Uses in await cur.fetchall()]
+        result = [
+            (Name, EmojiID, Uses)
+            for Name, EmojiID, Uses in await cur.fetchall()
+            if EmojiID in known
+        ]
         used_check = {x[1] for x in result}
         not_used = [
-            (emoji.name, emoji.id, 0)
-            for emoji in self.tbd.emojis
-            if emoji.id not in used_check
+            (emoji.name, emoji.id, 0) for emoji in known if emoji.id not in used_check
         ]
 
         least_used = [

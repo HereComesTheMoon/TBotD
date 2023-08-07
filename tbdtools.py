@@ -2,8 +2,9 @@ import aiosqlite
 import discord
 from discord.ext import commands
 import timeywimey
+import botlog as bl
 
-from config import on_tbd
+from config import IDGI
 
 
 class TBDTools(commands.Cog):
@@ -13,63 +14,82 @@ class TBDTools(commands.Cog):
             everyone=False, roles=False, replied_user=False
         )
         self.db = db
+        if self.bot.get_cog("Part") is None:
+            raise "Part is not loaded. !cwbanme won't work"
 
-    @commands.Cog.listener()
-    @on_tbd()
-    async def on_message(self, msg: discord.Message):
-        # TODO: Also strip all symbols when checking whether a word fits the TBD scheme
-        if msg.author.bot:
-            return 0
-        words = msg.content.split()
-        if len(words) >= 3:
-            to, be, determined = words[0], words[1], words[2]
-            if (
-                to[0].lower() == "t"
-                and be[0].lower() == "b"
-                and determined[0].lower() == "d"
-            ):
-                now = timeywimey.right_now()
-                await self.add_tbd_suggestion(
-                    now, msg.author.id, msg.id, to, be, determined
+    @commands.command()
+    async def blindme(self, ctx: commands.Context, *, post: str = ""):
+        """Blind yourself from a server for a set amount of time. eg. !blindme 2 hours"""
+        bl.log(self.blindme, ctx)
+        if ctx.guild is None:
+            await ctx.reply(
+                "This can for now only be used on a Discord server. If it's important to you that you can use it in DMs tell me, and I will fix it."
+            )
+            return
+        _, due, parse_status = timeywimey.parse_time(post)
+        if parse_status == 0:
+            await ctx.message.add_reaction(IDGI)
+            return
+
+        cog = self.bot.get_cog("Part")
+        if cog is None:
+            bl.error_log("The !part cog is not loaded, but the TBDTools cog is.")
+            await ctx.reply("Error: The !part cog is not loaded.")
+            return
+
+        member = ctx.author
+        for channel in ctx.guild.channels:
+            try:
+                await channel.set_permissions(member, read_messages=False)
+                cur = await self.db.cursor()
+                await cur.execute(
+                    """
+                    INSERT INTO part(UserID, GuildID, ChannelID, Due, Error)
+                    VALUES (?, ?, ?, ?, ?);
+                    """,
+                    (ctx.author.id, ctx.guild.id, channel.id, due, None),
                 )
-
-    @commands.Cog.listener()
-    async def on_guild_update(self, before: discord.Guild, after: discord.Guild):
-        if before.name != after.name:
-            words = after.name.split()
-            if len(words) >= 3:
-                to, be, determined = words[0], words[1], words[2]
-                if (
-                    to[0].lower() == "t"
-                    and be[0].lower() == "b"
-                    and determined[0].lower() == "d"
-                ):
-                    await self.add_tbd_used_title(
-                        timeywimey.right_now(), to, be, determined
-                    )
-
-    async def add_tbd_suggestion(
-        self, date: int, user_id: int, post_id: int, to: str, be: str, determined: str
-    ):
-        # TABLE suggestions (date INT, userID INT, postID INT, t TEXT, b TEXT, d TEXT)
-        cur = await self.db.cursor()
-        await cur.execute(
-            """
-            INSERT INTO suggestions 
-            VALUES (?,?,?,?,?,?)
-            """,
-            [date, user_id, post_id, to, be, determined],
-        )
+                await cur.close()
+            except discord.Forbidden:
+                pass
         await self.db.commit()
 
-    async def add_tbd_used_title(self, date: int, to: str, be: str, determined: str):
-        # TABLE used_title (date INT, t TEXT, b TEXT, d TEXT)
+    @commands.command()
+    async def cwbanme(self, ctx: commands.Context, *, post: str = ""):
+        """CW-Ban yourself for a set amount of time. eg. !cwbanme 2 hours"""
+        _, due, parse_status = timeywimey.parse_time(post)
+        if parse_status == 0:
+            await ctx.message.add_reaction(IDGI)
+            return
+
+        cog = self.bot.get_cog("Part")
+        if cog is None:
+            bl.error_log("The !part cog is not loaded, but the TBDTools cog is.")
+            await ctx.reply("Error: The !part cog is not loaded.")
+            return
+
+        # This is a special case for a specific server. It's a bit brittle
+        # It avoids having to hardcode the channel ID into the config file
+        channel = discord.utils.get(
+            self.bot.get_all_channels(), name="culture-war", category__name="TOP TEXT"
+        )
+
+        if channel is None:
+            bl.error_log(
+                "Can't find the culture-war channel! Was it or its category renamed recently?"
+            )
+
+        guild = channel.guild
+        member = guild.get_member(ctx.author.id)
+
+        await channel.set_permissions(member, read_messages=False)
+
         cur = await self.db.cursor()
         await cur.execute(
             """
-            INSERT INTO used_titles 
-            VALUES (?,?,?,?)
+            INSERT INTO part(UserID, GuildID, ChannelID, Due, Error)
+            VALUES (?, ?, ?, ?, ?);
             """,
-            [date, to, be, determined],
+            (ctx.author.id, guild.id, channel.id, due, None),
         )
         await self.db.commit()

@@ -7,9 +7,8 @@ import discord
 from discord.ext import commands
 
 import botlog as bl
-import emojicount
+import counter
 import fixtwitter
-import moderation
 import ownertools
 import part
 import reminders
@@ -30,9 +29,8 @@ from config import (
     KEY,
     DB_LOCATION,
     BACKUPS_LOCATION,
-    LOAD_EMOJICOUNT,
+    LOAD_COUNTER,
     LOAD_FIXTWITTER,
-    LOAD_MODERATION,
     LOAD_OWNERTOOLS,
     LOAD_PART,
     LOAD_REMINDERS,
@@ -40,7 +38,6 @@ from config import (
     LOAD_THREADWATCH,
     LOAD_YUD,
     LOAD_TBDTOOLS,
-    LOGGER_CHANNEL,
     ORANGE_PORTAL,
     PLEADING,
     RAT,
@@ -91,8 +88,8 @@ async def on_ready():
     if LOAD_REMINDERS:
         await TBotD.add_cog(reminders.Reminders(TBotD, connection))
     # Counts the number of reacted emojis
-    if LOAD_EMOJICOUNT:
-        await TBotD.add_cog(emojicount.EmojiCount(TBotD, connection))
+    if LOAD_COUNTER:
+        await TBotD.add_cog(counter.Counter(TBotD, connection))
     # Keeps track of TBD title suggestions
     if LOAD_TBDTOOLS:
         await TBotD.add_cog(tbdtools.TBDTools(TBotD, connection))
@@ -111,19 +108,10 @@ async def on_ready():
     # !part command
     if LOAD_PART:
         await TBotD.add_cog(part.Part(TBotD, connection))
-    # Calls the mods when a :loudspeaker: react is added
-    if LOAD_MODERATION:
-        logger_channel = await TBotD.fetch_channel(LOGGER_CHANNEL)
-        if isinstance(logger_channel, discord.TextChannel):
-            await TBotD.add_cog(moderation.Moderation(TBotD, logger_channel))
-        else:
-            bl.error_log.error(
-                "logger_channel is not a TextChannel. Unable to load Cog."
-            )
     # Owner tools, to kill the bot and to puppet it
     if LOAD_OWNERTOOLS:
         await TBotD.add_cog(
-            ownertools.OwnerTools(TBotD, connection, tbd, timeywimey.right_now())
+            ownertools.OwnerTools(TBotD, connection, timeywimey.right_now())
         )
 
 

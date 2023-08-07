@@ -63,6 +63,7 @@ def backup(db_location: str, backup_folder: str):
 
     new_con = sqlite3.connect(new_backup)
     con = sqlite3.connect(db_location)
+
     con.backup(new_con)
 
     new_con.close()
@@ -129,14 +130,20 @@ def initialise_database(location: str):
             """
             CREATE TABLE 
             IF NOT EXISTS 
-            suggestions (date INT, userID INT, postID INT, t TEXT, b TEXT, d TEXT)
+            suggestions (
+                Suggestion TEXT NOT NULL
+            );
             """
         )
         con.execute(
             """
             CREATE TABLE 
             IF NOT EXISTS 
-            used_titles (date INT, t TEXT, b TEXT, d TEXT)
+            used_titles (
+                GuildID INT  NOT NULL,
+                Date    INT  NOT NULL,
+                Title   TEXT NOT NULL
+            );
             """
         )
         con.execute(

@@ -1,5 +1,4 @@
 import configparser
-import discord
 from discord.ext import commands
 
 config = configparser.ConfigParser()
@@ -13,22 +12,19 @@ KEY = config["config"]["key"]
 SERVER_ID = int(config["tbd"]["SERVER"])
 
 THREAD_WATCH_CHANNEL = int(config["tbd"]["THREAD_WATCH_CHANNEL"])
-LOGGER_CHANNEL = int(config["tbd"]["LOGGER_CHANNEL"])
 
 CW_BAN_ROLE = int(config["tbd"]["CW_BAN_ROLE"])
 BLINDED_ROLE = int(config["tbd"]["BLINDED_ROLE"])
 MUTED_ROLE = int(config["tbd"]["MUTED_ROLE"])
-MOD_ROLE = int(config["tbd"]["MOD_ROLE"])
 
 # Load cogs configuration
 LOAD_REMINDERS = config.getboolean("cogs", "reminders", fallback=False)
-LOAD_EMOJICOUNT = config.getboolean("cogs", "emojicount", fallback=False)
+LOAD_COUNTER = config.getboolean("cogs", "counter", fallback=False)
 LOAD_TEMPROLES = config.getboolean("cogs", "temproles", fallback=False)
 LOAD_THREADWATCH = config.getboolean("cogs", "threadwatch", fallback=False)
 LOAD_FIXTWITTER = config.getboolean("cogs", "fixtwitter", fallback=False)
 LOAD_YUD = config.getboolean("cogs", "yud", fallback=False)
 LOAD_PART = config.getboolean("cogs", "part", fallback=False)
-LOAD_MODERATION = config.getboolean("cogs", "moderation", fallback=False)
 LOAD_OWNERTOOLS = config.getboolean("cogs", "ownertools", fallback=False)
 LOAD_TBDTOOLS = config.getboolean("cogs", "tbdtools", fallback=False)
 

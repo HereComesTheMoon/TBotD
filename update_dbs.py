@@ -1,4 +1,5 @@
 import sqlite3
+from config import SERVER_ID
 
 # import shutil
 # import os
@@ -105,7 +106,108 @@ def update_part_db():
 		    """
         )
         cur.close()
+        con.commit()
+
+
+def update_memories_db():
+    with sqlite3.connect(DB_LOCATION) as con:
+        cur = con.cursor()
+        cur.executescript(
+            """
+		    ALTER TABLE
+		    memories RENAME TO temp;
+
+            CREATE TABLE 
+            IF NOT EXISTS 
+            memories (
+                UserID    INT  NOT NULL,
+                PostURL   INT  NOT NULL,
+                Reminder  TEXT NOT NULL,
+                QueryMade INT  NOT NULL,
+                QueryDue  INT  NOT NULL,
+                Handled   INT  NOT NULL,
+                Error     TEXT 
+            );
+
+		    INSERT INTO memories(UserID, PostURL, Reminder, QueryMade, QueryDue, Handled, Error)
+            SELECT userID, postUrl, reminder, queryMade, queryDue, 0, NULL
+		    FROM temp
+            WHERE status LIKE "Future";
+
+		    INSERT INTO memories(UserID, PostURL, Reminder, QueryMade, QueryDue, Handled, Error)
+            SELECT userID, postUrl, reminder, queryMade, queryDue, 1, NULL
+		    FROM temp
+            WHERE status NOT LIKE "Future";
+
+		    DROP TABLE temp;
+		    """
+        )
+        cur.close()
+        con.commit()
+
+        con.execute(
+            """
+            CREATE TABLE 
+            IF NOT EXISTS 
+            suggestions (date INT, userID INT, postID INT, t TEXT, b TEXT, d TEXT)
+            """
+        )
+        con.execute(
+            """
+            CREATE TABLE 
+            IF NOT EXISTS 
+            used_titles (date INT, t TEXT, b TEXT, d TEXT)
+            """
+        )
+
+
+def update_tbd_db():
+    with sqlite3.connect(DB_LOCATION) as con:
+        cur = con.cursor()
+        cur.executescript(
+            """
+		    ALTER TABLE
+		    suggestions RENAME TO temp;
+
+            CREATE TABLE 
+            IF NOT EXISTS 
+            suggestions (
+                Suggestion TEXT NOT NULL
+            );
+
+		    INSERT INTO suggestions(Suggestion)
+            SELECT t || ' ' || b || ' ' || d
+            FROM temp;
+
+		    DROP TABLE temp;
+		    """
+        )
+        cur.close()
+
+        cur = con.cursor()
+        cur.executescript(
+            f"""
+		    ALTER TABLE
+		    used_titles RENAME TO temp;
+
+            CREATE TABLE 
+            IF NOT EXISTS 
+            used_titles (
+                GuildID INT  NOT NULL,
+                Date    INT  NOT NULL,
+                Title   TEXT NOT NULL
+            );
+
+		    INSERT INTO used_titles(GuildID, Date, Title)
+            SELECT {SERVER_ID}, date, t || ' ' || b || ' ' || d
+            FROM temp;
+
+		    DROP TABLE temp;
+		    """
+        )
+        cur.close()
+        con.commit()
 
 
 if __name__ == "__main__":
-    update_part_db()
+    update_tbd_db()
