@@ -59,8 +59,8 @@ class OwnerTools(commands.Cog, name="Tools"):
         print("Shutdown command received.")
         await ctx.message.add_reaction(CATSCREAM)
         try:
-            await self.bot.close()
             await self.db.close()
+            await self.bot.close()
             backup(DB_LOCATION, BACKUPS_LOCATION)
         except Exception as e:
             print(e)

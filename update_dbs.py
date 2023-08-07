@@ -86,9 +86,6 @@ def update_part_db():
         cur = con.cursor()
         cur.executescript(
             """
-		    ALTER TABLE
-		    part RENAME TO temp;
-
             CREATE TABLE 
             IF NOT EXISTS 
             part (
@@ -99,10 +96,10 @@ def update_part_db():
                 Error     TEXT
             );
 
-		    INSERT INTO part(UserID, GuildID, ChannelID, Due, Status)
+		    INSERT INTO part(UserID, GuildID, ChannelID, Due, Error)
 		    SELECT userID, guildID, channelID, due, NULL
 		    FROM temp
-            WHERE Status NOT LIKE "Past";
+            WHERE status NOT LIKE "Past";
 
 		    DROP TABLE temp;
 		    """
