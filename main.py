@@ -173,7 +173,9 @@ async def portal(ctx: commands.Context, *, arg: str = ""):
             url=ctx.message.jump_url,
             description=what,
         )
-        embed.set_author(name=ctx.author.name, icon_url=ctx.author.display_avatar.url)
+        embed.set_author(
+            name=ctx.author.display_name, icon_url=ctx.author.display_avatar.url
+        )
         embed.set_thumbnail(url=ORANGE_PORTAL)
         target_msg = await channel.send(content=ctx.message.jump_url, embed=embed)
 
@@ -184,7 +186,9 @@ async def portal(ctx: commands.Context, *, arg: str = ""):
             url=target_msg.jump_url,
             description=what,
         )
-        embed.set_author(name=ctx.author.name, icon_url=ctx.author.display_avatar.url)
+        embed.set_author(
+            name=ctx.author.display_name, icon_url=ctx.author.display_avatar.url
+        )
         embed.set_thumbnail(url=BLUE_PORTAL)
         await ctx.channel.send(content=target_msg.jump_url, embed=embed)
 
@@ -195,7 +199,9 @@ async def portal(ctx: commands.Context, *, arg: str = ""):
             url=ctx.message.jump_url,
             description=what,
         )
-        embed.set_author(name=ctx.author.name, icon_url=ctx.author.display_avatar.url)
+        embed.set_author(
+            name=ctx.author.display_name, icon_url=ctx.author.display_avatar.url
+        )
         embed.set_thumbnail(url=ORANGE_PORTAL)
         await target_msg.edit(content=ctx.message.jump_url, embed=embed)
 
