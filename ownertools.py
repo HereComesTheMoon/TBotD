@@ -2,10 +2,25 @@ import discord
 from discord.ext import commands
 import botlog as bl
 from aiosqlite import Connection
+from asyncio.exceptions import CancelledError
+from asyncio import sleep
 
 from tabulate import tabulate
 
-from config import CATSCREAM, IDGI, DB_LOCATION, BACKUPS_LOCATION
+from config import (
+    IDGI,
+    DB_LOCATION,
+    BACKUPS_LOCATION,
+    FLUSHED,
+    WAVE,
+    CONFOUNDED,
+    WOOZY,
+    CATHEARTS,
+    CATPOUT,
+    RAT,
+    PLEADING,
+)
+from random import choice
 
 from db import backup
 
@@ -24,6 +39,22 @@ class OwnerTools(commands.Cog, name="Tools"):
     async def on_message(self, msg: discord.Message):
         if msg.author.bot:
             return
+        assert self.bot.user is not None
+        if self.bot.user.mentioned_in(msg):
+            await msg.add_reaction(
+                choice(
+                    [
+                        FLUSHED,
+                        WAVE,
+                        CONFOUNDED,
+                        WOOZY,
+                        CATHEARTS,
+                        CATPOUT,
+                        RAT,
+                        PLEADING,
+                    ]
+                )
+            )
 
     @commands.command(hidden=True)
     @commands.is_owner()
@@ -54,17 +85,21 @@ class OwnerTools(commands.Cog, name="Tools"):
     async def kill(self, ctx: commands.Context):
         bl.log(self.kill, ctx)
         print("Shutdown command received.")
-        await ctx.message.add_reaction(CATSCREAM)
         try:
-            await self.bot.close()  # If db.close() happens before bot.close() then the program does not terminate correctly, and the docker container keeps running
+            for cog in self.bot.cogs.values():
+                await cog.cog_unload()
+            print("Cogs unloaded")
+            await sleep(1)
+
             await self.db.close()
+            await self.bot.close()  # If db.close() happens before bot.close() then the program does not terminate correctly, and the docker container keeps running
             backup(DB_LOCATION, BACKUPS_LOCATION)
         except Exception as e:
             print(e)
             bl.error_log.exception(e)
         finally:
             print("Exiting now.")
-            exit(0)
+            # exit(0) # Don't. This is bad, breaks the shutdown
 
     @commands.Cog.listener()
     async def on_member_join(self, member: discord.Member):

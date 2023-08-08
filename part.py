@@ -11,7 +11,7 @@ class Part(commands.Cog, name="Part"):
     def __init__(self, bot: commands.Bot, db: aiosqlite.Connection):
         self.bot = bot
         self.db = db
-        self.loop.start()
+        self.part_loop.start()
 
     @commands.command(aliases=["snooze"])
     @commands.guild_only()
@@ -94,7 +94,7 @@ class Part(commands.Cog, name="Part"):
         await self.db.commit()
 
     @tasks.loop(seconds=1)
-    async def loop(self):
+    async def part_loop(self):
         now = timeywimey.right_now() + 1
         tasks = await self.db.execute(
             """
@@ -109,6 +109,9 @@ class Part(commands.Cog, name="Part"):
         for row in await tasks.fetchall():
             await self.unpart(row)
 
-    @loop.before_loop
+    @part_loop.before_loop
     async def before_loop(self):
         await self.bot.wait_until_ready()
+
+    async def cog_unload(self):
+        self.part_loop.stop()

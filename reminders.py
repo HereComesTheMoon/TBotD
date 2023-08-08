@@ -27,6 +27,9 @@ class Reminders(commands.Cog):
     async def before_reminder_loop(self):
         await self.bot.wait_until_ready()
 
+    async def cog_unload(self):
+        self.reminder_loop.stop()
+
     async def queue_reminders(self):
         p = await self.read_data(
             """

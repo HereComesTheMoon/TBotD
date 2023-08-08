@@ -117,6 +117,9 @@ class Yud(commands.Cog):
     async def yud_loop(self):
         await self.queue_yudminders()
 
+    async def cog_unload(self):
+        self.yud_loop.stop()
+
     async def queue_yudminders(self):
         now = right_now()
         cur = await self.db.cursor()

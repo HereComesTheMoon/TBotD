@@ -18,11 +18,7 @@ import tbdtools
 import db
 from config import (
     BLUE_PORTAL,
-    CATHEARTS,
-    CATPOUT,
-    CONFOUNDED,
     DENIED,
-    FLUSHED,
     IDGI,
     KEY,
     DB_LOCATION,
@@ -35,11 +31,6 @@ from config import (
     LOAD_YUD,
     LOAD_TBDTOOLS,
     ORANGE_PORTAL,
-    PLEADING,
-    RAT,
-    TBD_GUILD,
-    WAVE,
-    WOOZY,
 )
 
 # Intents
@@ -237,20 +228,6 @@ async def when(ctx: commands.Context, *, post: str = ""):
         [f"Type ``<t:{then}{flag}>`` to write <t:{then}{flag}>.\n" for flag in formats]
     )
     await ctx.reply(content=content)
-
-
-@TBotD.event
-async def on_message(msg: discord.Message):
-    if msg.author.bot:
-        return
-    assert TBotD.user is not None
-    if TBotD.user.mentioned_in(msg):
-        await msg.add_reaction(
-            random.choice(
-                [FLUSHED, WAVE, CONFOUNDED, WOOZY, CATHEARTS, CATPOUT, RAT, PLEADING]
-            )
-        )
-    await TBotD.process_commands(msg)
 
 
 @TBotD.event
