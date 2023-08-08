@@ -209,5 +209,17 @@ def update_tbd_db():
         con.commit()
 
 
+def delete_temproles_db():
+    with sqlite3.connect(DB_LOCATION) as con:
+        cur = con.cursor()
+        cur.executescript(
+            """
+		    DROP TABLE add_at;
+		    DROP TABLE remove_at;
+		    """
+        )
+        cur.close()
+
+
 if __name__ == "__main__":
-    update_tbd_db()
+    delete_temproles_db()

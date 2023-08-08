@@ -21,6 +21,7 @@ class TBDTools(commands.Cog):
             everyone=False, roles=False, replied_user=False
         )
         self.db = db
+        assert self.get_guild(TBD_GUILD) is not None
         if self.bot.get_cog("Part") is None:
             raise "Part is not loaded. !cwbanme won't work"
 

@@ -6,7 +6,6 @@ from pathlib import Path
 import sqlite3
 
 from config import DB_LOCATION, BACKUPS_LOCATION
-from botlog import logger
 
 
 async def get_database(location: str) -> aiosqlite.Connection:
@@ -86,20 +85,20 @@ def initialise_database(location: str):
             memories (userID INTEGER, postID INTEGER, postUrl TEXT, reminder TEXT, queryMade INT, queryDue INT, status TEXT);
             """
         )
-        con.execute(
-            """
-            CREATE TABLE 
-            IF NOT EXISTS 
-            remove_at (user_id INTEGER, role_id INTEGER, due INTEGER, status TEXT)
-            """
-        )
-        con.execute(
-            """
-            CREATE TABLE 
-            IF NOT EXISTS 
-            add_at (user_id INTEGER, role_id INTEGER, due INTEGER, status TEXT)
-            """
-        )
+        # con.execute(
+        #     """
+        #     CREATE TABLE
+        #     IF NOT EXISTS
+        #     remove_at (user_id INTEGER, role_id INTEGER, due INTEGER, status TEXT)
+        #     """
+        # )
+        # con.execute(
+        #     """
+        #     CREATE TABLE
+        #     IF NOT EXISTS
+        #     add_at (user_id INTEGER, role_id INTEGER, due INTEGER, status TEXT)
+        #     """
+        # )
         con.execute(
             """
             CREATE TABLE 

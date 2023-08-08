@@ -12,7 +12,6 @@ import fixtwitter
 import ownertools
 import part
 import reminders
-import temproles
 import timeywimey
 import yud
 import tbdtools
@@ -33,7 +32,6 @@ from config import (
     LOAD_OWNERTOOLS,
     LOAD_PART,
     LOAD_REMINDERS,
-    LOAD_TEMPROLES,
     LOAD_YUD,
     LOAD_TBDTOOLS,
     ORANGE_PORTAL,
@@ -75,9 +73,6 @@ async def on_ready():
         print(f"{e}")
         await TBotD.close()
 
-    tbd = TBotD.get_guild(TBD_GUILD)
-    assert tbd is not None
-
     app = await TBotD.application_info()
     TBotD.owner_id = app.owner.id
 
@@ -97,9 +92,6 @@ async def on_ready():
     # !part command
     if LOAD_PART:
         await TBotD.add_cog(part.Part(TBotD, connection))
-    # !cwbanme and related commands
-    if LOAD_TEMPROLES:
-        await TBotD.add_cog(temproles.RoleManagement(TBotD, tbd, connection))
     # "Fixes" Twitter links. Relies on vxtwitter.
     if LOAD_FIXTWITTER:
         await TBotD.add_cog(fixtwitter.FixTwitter(TBotD))

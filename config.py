@@ -12,7 +12,6 @@ BACKUPS_LOCATION = config["config"]["backups_location"]
 # Load cogs configuration
 LOAD_REMINDERS = config.getboolean("cogs", "reminders", fallback=False)
 LOAD_COUNTER = config.getboolean("cogs", "counter", fallback=False)
-LOAD_TEMPROLES = config.getboolean("cogs", "temproles", fallback=False)
 LOAD_FIXTWITTER = config.getboolean("cogs", "fixtwitter", fallback=False)
 LOAD_YUD = config.getboolean("cogs", "yud", fallback=False)
 LOAD_PART = config.getboolean("cogs", "part", fallback=False)
@@ -22,13 +21,7 @@ LOAD_TBDTOOLS = config.getboolean("cogs", "tbdtools", fallback=False)
 # TBD-specific
 TBD_GUILD = int(config["tbd"]["TBD_GUILD"])
 CW_CHANNEL = int(config["tbd"]["CW_CHANNEL"])
-
 THREAD_WATCH_CHANNEL = int(config["tbd"]["THREAD_WATCH_CHANNEL"])
-
-CW_BAN_ROLE = int(config["tbd"]["CW_BAN_ROLE"])
-BLINDED_ROLE = int(config["tbd"]["BLINDED_ROLE"])
-MUTED_ROLE = int(config["tbd"]["MUTED_ROLE"])
-
 
 # Miscellaneous stuff, emoji and pictures. Nothing sensitive
 config = configparser.ConfigParser()
@@ -41,9 +34,6 @@ ORANGE_PORTAL = config["misc"]["ORANGE_PORTAL"]
 IDGI = config["misc"]["IDGI"]
 # Bot reacts with NO to message if it doesn't allow something
 DENIED = config["misc"]["DENIED"]
-
-# To alert mods
-LOUDSPEAKER = config["misc"]["LOUDSPEAKER"]
 
 # 'fun':
 FLUSHED = config["misc"]["FLUSHED"]
