@@ -13,7 +13,6 @@ import ownertools
 import part
 import reminders
 import temproles
-import threadwatch
 import timeywimey
 import yud
 import tbdtools
@@ -35,7 +34,6 @@ from config import (
     LOAD_PART,
     LOAD_REMINDERS,
     LOAD_TEMPROLES,
-    LOAD_THREADWATCH,
     LOAD_YUD,
     LOAD_TBDTOOLS,
     ORANGE_PORTAL,
@@ -84,35 +82,34 @@ async def on_ready():
     TBotD.owner_id = app.owner.id
 
     # Cogs:
+    # Owner tools, to kill the bot and to puppet it
+    if LOAD_OWNERTOOLS:
+        await TBotD.add_cog(
+            ownertools.OwnerTools(TBotD, connection, timeywimey.right_now())
+        )
+
     # !remindme
     if LOAD_REMINDERS:
         await TBotD.add_cog(reminders.Reminders(TBotD, connection))
     # Counts the number of reacted emojis, guild names, tbd-strings
     if LOAD_COUNTER:
         await TBotD.add_cog(counter.Counter(TBotD, connection))
-    # Tools for a single specific guild (ie. tbd)
-    if LOAD_TBDTOOLS:
-        await TBotD.add_cog(tbdtools.TBDTools(TBotD, connection))
+    # !part command
+    if LOAD_PART:
+        await TBotD.add_cog(part.Part(TBotD, connection))
     # !cwbanme and related commands
     if LOAD_TEMPROLES:
         await TBotD.add_cog(temproles.RoleManagement(TBotD, tbd, connection))
-    # Post a comment when a new thread is created. TODO: Should be reworked at some point.
-    if LOAD_THREADWATCH:
-        await TBotD.add_cog(threadwatch.ThreadWatch(TBotD))
     # "Fixes" Twitter links. Relies on vxtwitter.
     if LOAD_FIXTWITTER:
         await TBotD.add_cog(fixtwitter.FixTwitter(TBotD))
     # Posts Yud
     if LOAD_YUD:
         await TBotD.add_cog(yud.Yud(TBotD, connection))
-    # !part command
-    if LOAD_PART:
-        await TBotD.add_cog(part.Part(TBotD, connection))
-    # Owner tools, to kill the bot and to puppet it
-    if LOAD_OWNERTOOLS:
-        await TBotD.add_cog(
-            ownertools.OwnerTools(TBotD, connection, timeywimey.right_now())
-        )
+
+    # Tools for a single specific guild (ie. tbd)
+    if LOAD_TBDTOOLS:
+        await TBotD.add_cog(tbdtools.TBDTools(TBotD, connection))
 
 
 @TBotD.command()
