@@ -41,7 +41,7 @@ from config import (
     ORANGE_PORTAL,
     PLEADING,
     RAT,
-    SERVER_ID,
+    TBD_GUILD,
     WAVE,
     WOOZY,
 )
@@ -77,7 +77,7 @@ async def on_ready():
         print(f"{e}")
         await TBotD.close()
 
-    tbd = TBotD.get_guild(SERVER_ID)
+    tbd = TBotD.get_guild(TBD_GUILD)
     assert tbd is not None
 
     app = await TBotD.application_info()
@@ -87,10 +87,10 @@ async def on_ready():
     # !remindme
     if LOAD_REMINDERS:
         await TBotD.add_cog(reminders.Reminders(TBotD, connection))
-    # Counts the number of reacted emojis
+    # Counts the number of reacted emojis, guild names, tbd-strings
     if LOAD_COUNTER:
         await TBotD.add_cog(counter.Counter(TBotD, connection))
-    # Keeps track of TBD title suggestions
+    # Tools for a single specific guild (ie. tbd)
     if LOAD_TBDTOOLS:
         await TBotD.add_cog(tbdtools.TBDTools(TBotD, connection))
     # !cwbanme and related commands

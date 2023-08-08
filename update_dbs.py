@@ -1,5 +1,5 @@
 import sqlite3
-from config import SERVER_ID
+from config import TBD_GUILD
 
 # import shutil
 # import os
@@ -199,7 +199,7 @@ def update_tbd_db():
             );
 
 		    INSERT INTO used_titles(GuildID, Date, Title)
-            SELECT {SERVER_ID}, date, t || ' ' || b || ' ' || d
+            SELECT {TBD_GUILD}, date, t || ' ' || b || ' ' || d
             FROM temp;
 
 		    DROP TABLE temp;

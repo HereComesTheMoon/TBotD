@@ -4,18 +4,10 @@ from discord.ext import commands
 config = configparser.ConfigParser()
 config.read("config.ini")
 
-DB_LOCATION = config["config"]["db_location"]
-BACKUPS_LOCATION = config["config"]["backups_location"]
-
 KEY = config["config"]["key"]
 
-SERVER_ID = int(config["tbd"]["SERVER"])
-
-THREAD_WATCH_CHANNEL = int(config["tbd"]["THREAD_WATCH_CHANNEL"])
-
-CW_BAN_ROLE = int(config["tbd"]["CW_BAN_ROLE"])
-BLINDED_ROLE = int(config["tbd"]["BLINDED_ROLE"])
-MUTED_ROLE = int(config["tbd"]["MUTED_ROLE"])
+DB_LOCATION = config["config"]["db_location"]
+BACKUPS_LOCATION = config["config"]["backups_location"]
 
 # Load cogs configuration
 LOAD_REMINDERS = config.getboolean("cogs", "reminders", fallback=False)
@@ -25,8 +17,18 @@ LOAD_THREADWATCH = config.getboolean("cogs", "threadwatch", fallback=False)
 LOAD_FIXTWITTER = config.getboolean("cogs", "fixtwitter", fallback=False)
 LOAD_YUD = config.getboolean("cogs", "yud", fallback=False)
 LOAD_PART = config.getboolean("cogs", "part", fallback=False)
-LOAD_OWNERTOOLS = config.getboolean("cogs", "ownertools", fallback=False)
+LOAD_OWNERTOOLS = config.getboolean("cogs", "ownertools", fallback=True)
 LOAD_TBDTOOLS = config.getboolean("cogs", "tbdtools", fallback=False)
+
+# TBD-specific
+TBD_GUILD = int(config["tbd"]["TBD_GUILD"])
+CW_CHANNEL = int(config["tbd"]["CW_CHANNEL"])
+
+THREAD_WATCH_CHANNEL = int(config["tbd"]["THREAD_WATCH_CHANNEL"])
+
+CW_BAN_ROLE = int(config["tbd"]["CW_BAN_ROLE"])
+BLINDED_ROLE = int(config["tbd"]["BLINDED_ROLE"])
+MUTED_ROLE = int(config["tbd"]["MUTED_ROLE"])
 
 
 # Miscellaneous stuff, emoji and pictures. Nothing sensitive
@@ -60,7 +62,7 @@ def on_tbd():
     async def predicate(ctx):
         guild = ctx.guild
         if guild:
-            return ctx.guild.id == SERVER_ID
+            return ctx.guild.id == TBD_GUILD
         return False
 
     return commands.check(predicate)

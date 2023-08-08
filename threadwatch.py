@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 import botlog as bl
-from config import THREAD_WATCH_CHANNEL, SERVER_ID
+from config import THREAD_WATCH_CHANNEL, TBD_GUILD
 
 
 class ThreadWatch(commands.Cog):
@@ -18,7 +18,7 @@ class ThreadWatch(commands.Cog):
             await thread.fetch_member(self.bot.user.id)
         except discord.NotFound:
             await thread.join()
-            if thread.guild.id != SERVER_ID:
+            if thread.guild.id != TBD_GUILD:
                 return
 
             tw_channel: discord.TextChannel = await self.bot.fetch_channel(

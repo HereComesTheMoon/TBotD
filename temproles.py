@@ -6,7 +6,7 @@ import datetime
 import botlog as bl
 import timeywimey
 
-from config import CW_BAN_ROLE, BLINDED_ROLE, MUTED_ROLE, IDGI, SERVER_ID
+from config import CW_BAN_ROLE, BLINDED_ROLE, MUTED_ROLE, IDGI, TBD_GUILD
 
 # add_at / remove_at implement functions which add or remove a role at a given date.
 # Only remove_at is used at the current time
@@ -67,7 +67,7 @@ class RoleManagement(commands.Cog, name="Role Management"):
     @tasks.loop(hours=1)
     async def loop(self):
         await self.queue_role_changes()
-        self.TBD = self.bot.get_guild(SERVER_ID)
+        self.TBD = self.bot.get_guild(TBD_GUILD)
 
     @loop.before_loop
     async def before_loop(self):

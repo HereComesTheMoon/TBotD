@@ -4,7 +4,15 @@ from discord.ext import commands
 import timeywimey
 import botlog as bl
 
-from config import IDGI
+from config import IDGI, TBD_GUILD, CW_CHANNEL
+
+
+def is_tbd_member():
+    async def predicate(ctx: commands.Context):
+        tbd = ctx.bot.get_guild(TBD_GUILD)
+        return tbd.get_member(ctx.author.id) is not None
+
+    return commands.check(predicate)
 
 
 class TBDTools(commands.Cog):
@@ -22,10 +30,13 @@ class TBDTools(commands.Cog):
         """Blind yourself from a server for a set amount of time. eg. !blindme 2 hours"""
         bl.log(self.blindme, ctx)
         if ctx.guild is None:
-            await ctx.reply(
-                "This can for now only be used on a Discord server. If it's important to you that you can use it in DMs tell me, and I will fix it."
-            )
-            return
+            guild = self.bot.get_guild(TBD_GUILD)
+            if guild.get_member(ctx.author.id) is None:
+                await ctx.message.add_reaction(IDGI)
+                return
+        else:
+            guild = ctx.guild
+
         _, due, parse_status = timeywimey.parse_time(post)
         if parse_status == 0:
             await ctx.message.add_reaction(IDGI)
@@ -38,7 +49,7 @@ class TBDTools(commands.Cog):
             return
 
         member = ctx.author
-        for channel in ctx.guild.channels:
+        for channel in guild.channels:
             try:
                 await channel.set_permissions(member, read_messages=False)
                 cur = await self.db.cursor()
@@ -47,7 +58,7 @@ class TBDTools(commands.Cog):
                     INSERT INTO part(UserID, GuildID, ChannelID, Due, Error)
                     VALUES (?, ?, ?, ?, ?);
                     """,
-                    (ctx.author.id, ctx.guild.id, channel.id, due, None),
+                    (ctx.author.id, guild.id, channel.id, due, None),
                 )
                 await cur.close()
             except discord.Forbidden:
@@ -55,6 +66,7 @@ class TBDTools(commands.Cog):
         await self.db.commit()
 
     @commands.command()
+    @is_tbd_member()
     async def cwbanme(self, ctx: commands.Context, *, post: str = ""):
         """CW-Ban yourself for a set amount of time. eg. !cwbanme 2 hours"""
         _, due, parse_status = timeywimey.parse_time(post)
@@ -68,18 +80,9 @@ class TBDTools(commands.Cog):
             await ctx.reply("Error: The !part cog is not loaded.")
             return
 
-        # This is a special case for a specific server. It's a bit brittle
-        # It avoids having to hardcode the channel ID into the config file
-        channel = discord.utils.get(
-            self.bot.get_all_channels(), name="culture-war", category__name="TOP TEXT"
-        )
+        guild = self.bot.get_guild(TBD_GUILD)
+        channel = guild.get_channel(CW_CHANNEL)
 
-        if channel is None:
-            bl.error_log(
-                "Can't find the culture-war channel! Was it or its category renamed recently?"
-            )
-
-        guild = channel.guild
         member = guild.get_member(ctx.author.id)
 
         await channel.set_permissions(member, read_messages=False)
