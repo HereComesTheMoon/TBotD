@@ -1,6 +1,7 @@
 import discord
 from discord.ext import tasks, commands
 import aiosqlite
+import asyncio
 import botlog as bl
 import timeywimey
 
@@ -48,23 +49,22 @@ class Part(commands.Cog, name="Part"):
         await self.db.commit()
 
     @commands.command()
-    @commands.guild_only()
-    @commands.bot_has_permissions(manage_roles=True)
     async def rejoin(self, ctx: commands.Context, *, post: str = ""):
         """Rejoins all !part-ed channels."""
         bl.log(self.rejoin, ctx)
 
         tasks = await self.db.execute(
             """
-            SELECT UserID, GuildID, ChannelID FROM part
+            SELECT rowid, UserID, GuildID, ChannelID FROM part
             WHERE UserID = (?)
-            AND GuildID = (?)
-            AND Error IS NOT NULL;
+            AND Error IS NULL;
             """,
-            (ctx.author.id, ctx.guild.id),
+            (ctx.author.id,),
         )
-        for row in await tasks.fetchall():
-            await self.unpart(row)
+
+        async with asyncio.TaskGroup() as tg:
+            for row in await tasks.fetchall():
+                tg.create_task(self.unpart(row))
 
     async def unpart(self, row: aiosqlite.Row):
         try:
@@ -106,8 +106,9 @@ class Part(commands.Cog, name="Part"):
             [now],
         )
 
-        for row in await tasks.fetchall():
-            await self.unpart(row)
+        async with asyncio.TaskGroup() as tg:
+            for row in await tasks.fetchall():
+                tg.create_task(self.unpart(row))
 
     @part_loop.before_loop
     async def before_loop(self):

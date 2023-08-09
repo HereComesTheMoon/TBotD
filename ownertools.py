@@ -2,7 +2,6 @@ import discord
 from discord.ext import commands
 import botlog as bl
 from aiosqlite import Connection
-from asyncio.exceptions import CancelledError
 from asyncio import sleep
 
 from tabulate import tabulate
@@ -33,7 +32,7 @@ class OwnerTools(commands.Cog, name="Tools"):
         self.bot = bot
         self.db = db
         self.went_online_at = went_online_at
-        self.last_error_print_time = 0
+        self.last_error_print_time = went_online_at - 60
 
     @commands.Cog.listener()
     async def on_message(self, msg: discord.Message):
@@ -306,4 +305,7 @@ class OwnerTools(commands.Cog, name="Tools"):
                     if 30 <= len(q):
                         q.popleft()
             errors = "".join(q)
+
+            errors = errors[-1900:]
+
             await ctx.reply(f"There have been new errors. ```\n{errors}```")

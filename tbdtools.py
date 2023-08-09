@@ -1,4 +1,5 @@
 import aiosqlite
+import asyncio
 import discord
 from discord.ext import commands
 import timeywimey
@@ -49,20 +50,30 @@ class TBDTools(commands.Cog):
             return
 
         member = ctx.author
-        for channel in guild.channels:
+
+        async def task(channel: discord.TextChannel):
             try:
                 await channel.set_permissions(member, read_messages=False)
-                cur = await self.db.cursor()
-                await cur.execute(
-                    """
-                    INSERT INTO part(UserID, GuildID, ChannelID, Due, Error)
-                    VALUES (?, ?, ?, ?, ?);
-                    """,
-                    (ctx.author.id, guild.id, channel.id, due, None),
-                )
-                await cur.close()
             except discord.Forbidden:
-                pass
+                return
+            except discord.HTTPException as e:
+                bl.error_log.error(repr(e))
+                return
+
+            cur = await self.db.cursor()
+            await cur.execute(
+                """
+                INSERT INTO part(UserID, GuildID, ChannelID, Due, Error)
+                VALUES (?, ?, ?, ?, ?);
+                """,
+                (ctx.author.id, guild.id, channel.id, due, None),
+            )
+            await cur.close()
+
+        async with asyncio.TaskGroup() as tg:
+            for channel in guild.text_channels:
+                tg.create_task(task(channel))
+
         await self.db.commit()
 
     @commands.command()
