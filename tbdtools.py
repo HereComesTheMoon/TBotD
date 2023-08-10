@@ -72,6 +72,8 @@ class TBDTools(commands.Cog):
 
         async with asyncio.TaskGroup() as tg:
             for channel in guild.text_channels:
+                if "bot" in channel.name:
+                    continue
                 tg.create_task(task(channel))
 
         await self.db.commit()
