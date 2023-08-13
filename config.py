@@ -22,6 +22,7 @@ LOAD_TBDTOOLS = config.getboolean("cogs", "tbdtools", fallback=False)
 TBD_GUILD = int(config["tbd"]["TBD_GUILD"])
 CW_CHANNEL = int(config["tbd"]["CW_CHANNEL"])
 THREAD_WATCH_CHANNEL = int(config["tbd"]["THREAD_WATCH_CHANNEL"])
+BLINDED_ROLE = int(config["tbd"]["BLINDED_ROLE"])
 
 # Miscellaneous stuff, emoji and pictures. Nothing sensitive
 config = configparser.ConfigParser()
