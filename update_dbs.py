@@ -221,5 +221,23 @@ def delete_temproles_db():
         cur.close()
 
 
+def add_remove_role_table():
+    with sqlite3.conntect(DB_LOCATION) as con:
+        cur = con.cursor()
+        cur.execute(
+            """
+            CREATE TABLE
+            IF NOT EXISTS
+            remove_role (
+                UserID  INT NOT NULL,
+                GuildID INT NOT NULL,
+                RoleID  INT NOT NULL,
+                Due     INT NOT NULL,
+                Error TEXT
+            );"""
+        )
+        cur.close()
+
+
 if __name__ == "__main__":
-    delete_temproles_db()
+    add_remove_role_table()
