@@ -85,13 +85,18 @@ def initialise_database(location: str):
             memories (userID INTEGER, postID INTEGER, postUrl TEXT, reminder TEXT, queryMade INT, queryDue INT, status TEXT);
             """
         )
-        # con.execute(
-        #     """
-        #     CREATE TABLE
-        #     IF NOT EXISTS
-        #     remove_at (user_id INTEGER, role_id INTEGER, due INTEGER, status TEXT)
-        #     """
-        # )
+        con.execute(
+            """
+            CREATE TABLE
+            IF NOT EXISTS
+            remove_role (
+                UserID  INT NOT NULL,
+                GuildID INT NOT NULL,
+                RoleID  INT NOT NULL,
+                Due     INT NOT NULL,
+                Error TEXT
+            );"""
+        )
         # con.execute(
         #     """
         #     CREATE TABLE
