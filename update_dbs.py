@@ -222,7 +222,7 @@ def delete_temproles_db():
 
 
 def add_remove_role_table():
-    with sqlite3.conntect(DB_LOCATION) as con:
+    with sqlite3.connect(DB_LOCATION) as con:
         cur = con.cursor()
         cur.execute(
             """
