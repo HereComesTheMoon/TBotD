@@ -44,13 +44,11 @@ class TBDTools(commands.Cog):
                 bl.error_log.exception("Can't find thread-watch channel.")
                 return
 
-            content = f"New thread: {thread.mention} (#{thread.name})"
+            content = f"{thread.mention} (#{thread.name})"
             if thread.owner:
-                content += f" created by {thread.owner.mention} ({thread.owner})"
+                content += f" created by {thread.owner.mention}"
             if thread.parent:
-                content += f" in <#{thread.parent_id}> (#{thread.parent.name})"
-
-            content += f". Link: {thread.jump_url}"
+                content += f" in <#{thread.parent_id}>."
 
             try:
                 await tw_channel.send(content=content, allowed_mentions=self.ping_priv)
