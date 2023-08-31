@@ -35,6 +35,8 @@ ORANGE_PORTAL = config["misc"]["ORANGE_PORTAL"]
 IDGI = config["misc"]["IDGI"]
 # Bot reacts with NO to message if it doesn't allow something
 DENIED = config["misc"]["DENIED"]
+# Delete a post the bot made
+DELETE = config["misc"]["DELETE"]
 
 # 'fun':
 FLUSHED = config["misc"]["FLUSHED"]
