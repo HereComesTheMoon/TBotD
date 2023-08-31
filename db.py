@@ -76,7 +76,8 @@ def initialise_database(location: str):
     if os.path.isfile(location):
         raise FileExistsError
 
-    os.makedirs(location.parent)
+    os.makedirs(location.parent, exist_ok=True)
+
     with sqlite3.connect(location) as con:
         con.execute(
             """
