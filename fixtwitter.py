@@ -48,7 +48,7 @@ class FixTwitter(commands.Cog):
             pass  # For example, forbidden from removing embeds in a post that happened in DMs
 
         await asyncio.sleep(
-            7200
+            300
         )  # Two hours time during which deletion of msg results in deletion of response
         self.user_post_to_fixed.pop(msg.id, None)
         await fixed.remove_reaction(DELETE, self.bot)
