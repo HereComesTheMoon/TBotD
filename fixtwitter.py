@@ -9,7 +9,8 @@ class FixTwitter(commands.Cog):
     replace: list[tuple[str, str]] = [
         ("https://twitter.com/", "https://vxtwitter.com/"),
         ("https://x.com/", "https://vxtwitter.com/"),
-        ("https://bsky.app/", "https://psky.app/"),
+        ("https://www.tiktok.com/", "https://www.vxtiktok.com/"),
+        ("https://www.instagram.com/", "https://www.ddinstagram.com/"),
     ]
 
     def __init__(self, bot: commands.Bot):
