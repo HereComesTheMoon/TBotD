@@ -4,11 +4,14 @@ import asyncio
 
 from config import DELETE
 
-TWITTER_PREFIX = "https://twitter.com/"
-FIXTWITTER_PREFIX = "https://vxtwitter.com/"
-
 
 class FixTwitter(commands.Cog):
+    replace: list[tuple[str, str]] = [
+        ("https://twitter.com/", "https://vxtwitter.com/"),
+        ("https://x.com/", "https://vxtwitter.com/"),
+        ("https://bsky.app/", "https://psky.app/"),
+    ]
+
     def __init__(self, bot: commands.Bot):
         self.bot = bot
         self.ping_priv = discord.AllowedMentions(
@@ -28,11 +31,13 @@ class FixTwitter(commands.Cog):
         if msg.author.bot:
             return
 
-        if TWITTER_PREFIX not in msg.clean_content:
-            return
+        content = msg.clean_content
 
-        stuff = msg.clean_content.split(TWITTER_PREFIX)
-        content = FIXTWITTER_PREFIX.join(stuff)
+        for match, substitute in self.replace:
+            content = content.replace(match, substitute)
+
+        if content == msg.clean_content:
+            return
 
         try:
             fixed = await msg.reply(content, mention_author=False)
