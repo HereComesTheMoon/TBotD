@@ -190,7 +190,7 @@ class OwnerTools(commands.Cog, name="Tools"):
     @commands.guild_only()
     @commands.cooldown(1, 24 * 60 * 60, commands.BucketType.guild)
     async def least_used_emojis(self, ctx: commands.Context, *, post: str = ""):
-        known = set([emoji.id for emoji in ctx.guild.emojis])
+        known = set([emoji for emoji in ctx.guild.emojis])
         cur = await self.db.cursor()
         await cur.execute(
             """
