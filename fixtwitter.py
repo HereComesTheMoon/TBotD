@@ -55,9 +55,9 @@ class FixTwitter(commands.Cog):
 
         await asyncio.sleep(
             300
-        )  # Two hours time during which deletion of msg results in deletion of response
+        )  # five minutes during which deletion of msg results in deletion of response
         self.user_post_to_fixed.pop(msg.id, None)
-        await fixed.remove_reaction(DELETE, self.bot)
+        await fixed.remove_reaction(DELETE, msg.guild.get_member(self.bot.user.id))
         self.fixed_to_user_post.pop(fixed.id, None)
 
     @commands.Cog.listener()
