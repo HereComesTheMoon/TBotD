@@ -169,7 +169,7 @@ class OwnerTools(commands.Cog, name="Tools"):
         data.append(f"I have counted a total of {result} reactions with custom emojis!")
 
         cur = await self.db.cursor()
-        known = set(emoji.id for emoji in ctx.guild.emojis)
+        known = {emoji.id for emoji in ctx.guild.emojis}
         await cur.execute(
             """
             SELECT * FROM emojis_custom 
@@ -190,7 +190,7 @@ class OwnerTools(commands.Cog, name="Tools"):
     @commands.guild_only()
     @commands.cooldown(1, 24 * 60 * 60, commands.BucketType.guild)
     async def least_used_emojis(self, ctx: commands.Context, *, post: str = ""):
-        known = set([emoji for emoji in ctx.guild.emojis])
+        known = {emoji.id for emoji in ctx.guild.emojis}
         cur = await self.db.cursor()
         await cur.execute(
             """
@@ -205,9 +205,10 @@ class OwnerTools(commands.Cog, name="Tools"):
             for Name, EmojiID, Uses in await cur.fetchall()
             if EmojiID in known
         ]
-        used_check = {x[1] for x in result}
         not_used = [
-            (emoji.name, emoji.id, 0) for emoji in known if emoji.id not in used_check
+            (emoji.name, emoji.id, 0)
+            for emoji in ctx.guild.emojis
+            if emoji.id not in {emojiID for _, emojiID, _ in result}
         ]
 
         least_used = [
