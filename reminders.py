@@ -72,7 +72,7 @@ class Reminders(commands.Cog):
             )
         await self.db.commit()
 
-    @commands.command()
+    @commands.command(aliases=["rm"])
     async def remindme(self, ctx: commands.Context, *, arg: str = ""):
         """eg. !remindme 5 hours, take out the trash"""
         bl.log(self.remindme, ctx)
