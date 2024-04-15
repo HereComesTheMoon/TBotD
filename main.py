@@ -113,7 +113,7 @@ async def roll(ctx, *, dice: str = "1d2"):
     await ctx.channel.send(output)
 
 
-@TBotD.command(aliases=['pick'])
+@TBotD.command(aliases=["pick"])
 async def choose(ctx, *, post: str = ""):
     """Example: !choose Big Yud, small yud, wide yud"""
     bl.log(choose, ctx)

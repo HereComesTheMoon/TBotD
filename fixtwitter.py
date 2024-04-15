@@ -18,28 +18,23 @@ class FixTwitter(commands.Cog):
         self.ping_priv = discord.AllowedMentions(
             everyone=False, users=False, roles=False, replied_user=False
         )
-        self.user_post_to_fixed: dict[
-            int, discord.Message
-        ] = (
+        self.user_post_to_fixed: dict[int, discord.Message] = (
             {}
         )  # (id of original message, bot response message), use to delete bot response if original is deleted
-        self.fixed_to_user_post: dict[
-            int, discord.Message
-        ] = {}  # delete bot response if 'X' react happens
+        self.fixed_to_user_post: dict[int, discord.Message] = (
+            {}
+        )  # delete bot response if 'X' react happens
 
     @commands.Cog.listener()
     async def on_message(self, msg: discord.Message):
         if msg.author.bot:
             return
-
         content = msg.clean_content
 
         for match, substitute in self.replace:
             content = content.replace(match, substitute)
-
         if content == msg.clean_content:
             return
-
         try:
             fixed = await msg.reply(content, mention_author=False)
             self.user_post_to_fixed[msg.id] = fixed
@@ -47,12 +42,10 @@ class FixTwitter(commands.Cog):
             await fixed.add_reaction(DELETE)
         except discord.HTTPException:
             return  # If we cannot post a fixed link, return, since we do not want to suppress embeds on the post
-
         try:
             await msg.edit(suppress=True)
         except discord.errors.Forbidden:
             pass  # For example, forbidden from removing embeds in a post that happened in DMs
-
         await asyncio.sleep(
             300
         )  # five minutes during which deletion of msg results in deletion of response
@@ -75,12 +68,10 @@ class FixTwitter(commands.Cog):
             return
         if react.message.id not in self.fixed_to_user_post:
             return
-
         user_post = self.fixed_to_user_post[react.message.id]
 
         if user_post.author != user:
             return
-
         try:
             await user_post.edit(suppress=False)
         except discord.errors.Forbidden:
