@@ -30,3 +30,4 @@ class Poll(commands.Cog):
         if user == self.bot.user:
             return
         print(f"Received {reaction.emoji} from {user} for poll.")
+
