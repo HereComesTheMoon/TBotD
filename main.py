@@ -11,6 +11,7 @@ import counter
 import fixtwitter
 import ownertools
 import part
+import poll
 import reminders
 import timeywimey
 import yud
@@ -89,6 +90,9 @@ async def on_ready():
     # Posts Yud
     if LOAD_YUD:
         await TBotD.add_cog(yud.Yud(TBotD, connection))
+    # !poll command
+    if True:
+        await TBotD.add_cog(poll.Poll(TBotD, connection))
 
     # Tools for a single specific guild (ie. tbd)
     if LOAD_TBDTOOLS:
