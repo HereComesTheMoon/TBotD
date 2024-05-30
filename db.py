@@ -51,7 +51,6 @@ def backup(db_location: str, backup_folder: str):
     if not os.path.exists(backup_folder):
         print("No backup folder found, creating...")
         os.makedirs(backup_folder)
-
     now = datetime.now().isoformat(timespec="seconds")
 
     new_backup = os.path.join(backup_folder, now + "_db.db")
@@ -75,7 +74,6 @@ def initialise_database(location: str):
     location = Path(location)
     if os.path.isfile(location):
         raise FileExistsError
-
     os.makedirs(location.parent, exist_ok=True)
 
     with sqlite3.connect(location) as con:
@@ -98,13 +96,6 @@ def initialise_database(location: str):
                 Error TEXT
             );"""
         )
-        # con.execute(
-        #     """
-        #     CREATE TABLE
-        #     IF NOT EXISTS
-        #     add_at (user_id INTEGER, role_id INTEGER, due INTEGER, status TEXT)
-        #     """
-        # )
         con.execute(
             """
             CREATE TABLE 
@@ -178,8 +169,40 @@ def initialise_database(location: str):
             );
             """
         )
+        con.execute(
+            """
+            CREATE TABLE 
+            IF NOT EXISTS 
+            hotwords (
+                UserID    INT  NOT NULL,
+                Hotword   TEXT NOT NULL
+            );
+            """
+        )
     con.commit()
     con.close()
+
+
+async def add_hotword(con: aiosqlite.Connection, user_id: int, hotword: str):
+    await con.execute(
+        "INSERT INTO hotwords (UserID, Hotword) VALUES (?, ?)", (user_id, hotword)
+    )
+    await con.commit()
+
+
+async def remove_hotword(con: aiosqlite.Connection, user_id: int, hotword: str):
+    await con.execute(
+        "DELETE FROM hotwords WHERE UserID = ? AND Hotword = ?", (user_id, hotword)
+    )
+    await con.commit()
+
+
+async def get_hotwords(con: aiosqlite.Connection, user_id: int):
+    cursor = await con.execute(
+        "SELECT Hotword FROM hotwords WHERE UserID = ?", (user_id,)
+    )
+    rows = await cursor.fetchall()
+    return [row["Hotword"] for row in rows]
 
 
 if __name__ == "__main__":
