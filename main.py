@@ -105,7 +105,9 @@ async def on_ready():
 
 @TBotD.event
 async def on_message(message):
-    if message.author == TBotD.user:
+    if message.author.bot:
+        return
+    if message.guild is None:
         return
     connection = TBotD.db_connection
     cursor = await connection.execute("SELECT UserID, Hotword FROM hotwords")
@@ -117,14 +119,21 @@ async def on_message(message):
         if user_id not in user_hotwords:
             user_hotwords[user_id] = []
         user_hotwords[user_id].append(hotword)
+    content = message.content.lower()
     for user_id, hotwords in user_hotwords.items():
+        user = TBotD.get_user(user_id)
+        if not user:
+            continue
+        if user not in message.channel.members:
+            continue
+        found = []
         for hotword in hotwords:
-            if hotword.lower() in message.content.lower():
-                user = TBotD.get_user(user_id)
-                if user:
-                    await user.send(
-                        f"Hotword detected in message: {message.content}\nLink: {message.jump_url}"
-                    )
+            if hotword.lower() in content:
+                found.append(hotword)
+        if not found:
+            continue
+        answer = f"Hotword detected in message: {message.content}\nLink: {message.jump_url}"
+        await user.send(answer)
     await TBotD.process_commands(message)
 
 

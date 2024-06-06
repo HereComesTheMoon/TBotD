@@ -239,5 +239,18 @@ def add_remove_role_table():
         cur.close()
 
 
+def add_hotwords_table():
+    with sqlite3.connect(DB_LOCATION) as con:
+        con.execute(
+            """
+            CREATE TABLE 
+            IF NOT EXISTS 
+            hotwords (
+                UserID    INT  NOT NULL,
+                Hotword   TEXT NOT NULL
+            );
+            """
+        )
+
 if __name__ == "__main__":
-    add_remove_role_table()
+    add_hotwords_table()
