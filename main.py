@@ -133,7 +133,9 @@ async def on_message(message):
                 found.append(hotword)
         if not found:
             continue
-        answer = f"Hotword detected in message: {message.content}\nLink: {message.jump_url}"
+        answer = (
+            f"Hotword detected in message: {message.content}\nLink: {message.jump_url}"
+        )
         await user.send(answer)
 
 

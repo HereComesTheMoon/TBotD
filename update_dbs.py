@@ -252,5 +252,6 @@ def add_hotwords_table():
             """
         )
 
+
 if __name__ == "__main__":
     add_hotwords_table()
