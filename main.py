@@ -33,13 +33,20 @@ from config import (
     ORANGE_PORTAL,
 )
 
+
+class CustomBot(commands.Bot):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.db_connection = None
+
+
 # Intents
 intents = discord.Intents.all()
 # Status
 activity = discord.Activity(
     type=discord.ActivityType.listening, name="Poasting! Type '!help' for commands."
 )
-TBotD = commands.Bot(
+TBotD = CustomBot(
     command_prefix="!", activity=activity, intents=intents, status=discord.Status.online
 )
 
@@ -52,6 +59,7 @@ async def on_ready():
     try:
         db.backup(DB_LOCATION, BACKUPS_LOCATION)
         connection: aiosqlite.Connection = await db.get_database(DB_LOCATION)
+        TBotD.db_connection = connection
     except FileNotFoundError as e:
         bl.error_log.exception(e)
         print(f"{e}")
@@ -93,6 +101,58 @@ async def on_ready():
     # Tools for a single specific guild (ie. tbd)
     if LOAD_TBDTOOLS:
         await TBotD.add_cog(tbdtools.TBDTools(TBotD, connection))
+
+
+@TBotD.event
+async def on_message(message):
+    if message.author == TBotD.user:
+        return
+    connection = TBotD.db_connection
+    cursor = await connection.execute("SELECT UserID, Hotword FROM hotwords")
+    rows = await cursor.fetchall()
+    user_hotwords = {}
+    for row in rows:
+        user_id = row["UserID"]
+        hotword = row["Hotword"]
+        if user_id not in user_hotwords:
+            user_hotwords[user_id] = []
+        user_hotwords[user_id].append(hotword)
+    for user_id, hotwords in user_hotwords.items():
+        for hotword in hotwords:
+            if hotword.lower() in message.content.lower():
+                user = TBotD.get_user(user_id)
+                if user:
+                    await user.send(
+                        f"Hotword detected in message: {message.content}\nLink: {message.jump_url}"
+                    )
+    await TBotD.process_commands(message)
+
+
+@TBotD.command()
+async def addhotword(ctx, *, hotword: str):
+    """Add a hotword to be notified about."""
+    bl.log(addhotword, ctx)
+    await db.add_hotword(TBotD.db_connection, ctx.author.id, hotword)
+    await ctx.send(f"Added hotword: {hotword}")
+
+
+@TBotD.command()
+async def removehotword(ctx, *, hotword: str):
+    """Remove a hotword."""
+    bl.log(removehotword, ctx)
+    await db.remove_hotword(TBotD.db_connection, ctx.author.id, hotword)
+    await ctx.send(f"Removed hotword: {hotword}")
+
+
+@TBotD.command()
+async def listhotwords(ctx):
+    """List all your hotwords."""
+    bl.log(listhotwords, ctx)
+    hotwords = await db.get_hotwords(TBotD.db_connection, ctx.author.id)
+    if hotwords:
+        await ctx.send(f"Your hotwords: {', '.join(hotwords)}")
+    else:
+        await ctx.send("You have no hotwords.")
 
 
 @TBotD.command()
