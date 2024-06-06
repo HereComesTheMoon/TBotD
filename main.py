@@ -105,6 +105,7 @@ async def on_ready():
 
 @TBotD.event
 async def on_message(message):
+    await TBotD.process_commands(message)
     if message.author.bot:
         return
     if message.guild is None:
@@ -134,7 +135,6 @@ async def on_message(message):
             continue
         answer = f"Hotword detected in message: {message.content}\nLink: {message.jump_url}"
         await user.send(answer)
-    await TBotD.process_commands(message)
 
 
 @TBotD.command()
