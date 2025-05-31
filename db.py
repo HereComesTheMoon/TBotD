@@ -71,10 +71,10 @@ def backup(db_location: str, backup_folder: str):
 
 def initialise_database(location: str):
     """Columns CamelCase, Tables snake_case"""
-    location = Path(location)
-    if os.path.isfile(location):
-        raise FileExistsError
+    location = Path(DB_LOCATION)
     os.makedirs(location.parent, exist_ok=True)
+    if not os.path.isfile(location):
+        print("Database doesn't exist yet! This is weird and should be investigated.")
 
     with sqlite3.connect(location) as con:
         con.execute(
@@ -179,8 +179,6 @@ def initialise_database(location: str):
             );
             """
         )
-    con.commit()
-    con.close()
 
 
 async def add_hotword(con: aiosqlite.Connection, user_id: int, hotword: str):
@@ -206,9 +204,6 @@ async def get_hotwords(con: aiosqlite.Connection, user_id: int):
 
 
 if __name__ == "__main__":
-    try:
-        initialise_database(DB_LOCATION)
-    except FileExistsError:
-        print("Database already exists.")
+    initialise_database(DB_LOCATION)
     backup(DB_LOCATION, BACKUPS_LOCATION)
     check_backups(BACKUPS_LOCATION)
