@@ -131,7 +131,7 @@ class TBDTools(commands.Cog):
                 member: discord.Member = guild.get_member(row["UserID"])
 
                 await member.remove_roles(role, reason="Bot removed.")
-            except discord.DiscordException as e:
+            except (AttributeError, discord.DiscordException) as e:
                 bl.error_log.exception(e)
                 await self.db.execute(
                     """
