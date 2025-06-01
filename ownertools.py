@@ -310,3 +310,16 @@ class OwnerTools(commands.Cog, name="Tools"):
             errors = errors[-1900:]
 
             await ctx.reply(f"There have been new errors. ```\n{errors}```")
+
+    @commands.command(hidden=True)
+    @commands.is_owner()
+    async def logs(self, ctx: commands.Context):
+        bl.log(self.logs, ctx)
+
+        with open('./logs/errors.log', 'r') as elog, \
+             open('./logs/discord.log', 'r') as dlog:
+             files = [
+                 discord.File(elog, 'errors.log'),
+                 discord.File(dlog, 'discord.log'),
+             ]
+        await ctx.reply("Posting the log files.", files=files)
