@@ -129,7 +129,7 @@ async def on_message(message):
     await TBotD.process_commands(message)
     if message.author.bot:
         return
-    if "grok is this true" in message.content.lower():
+    if "grok is this true" in message.content.lower() or "gork is this true" in message.content.lower():
         await grok(message)
     if message.guild is None:
         return
