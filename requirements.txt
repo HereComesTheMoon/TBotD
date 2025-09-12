@@ -15,6 +15,7 @@ editdistance_s==1.0.0
 filelock==3.18.0
 frozenlist==1.6.0
 future==1.0.0
+httpx==0.28.1
 identify==2.6.12
 idna==3.10
 multidict==6.4.4

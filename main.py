@@ -105,13 +105,15 @@ async def on_ready():
         await TBotD.add_cog(tbdtools.TBDTools(TBotD, connection))
 
 
-async def grok(ctx):
+async def grok(message):
     answer = ""
-    rng = random.randint(1, 100)
-    if 1 <= rng < 40:
+    rng = random.randint(0, 99)
+    if 0 <= rng < 30:
         answer = "yeah"
-    elif 40 <= rng < 80:
+    elif 30 <= rng < 60:
         answer = "nah"
+    elif 60 <= rng < 80:
+        answer = await fetch_random_verse()
     else:
         answer = random.choice([
             "meditate upon it and become wiser",
@@ -119,7 +121,7 @@ async def grok(ctx):
             "😏",
             "As a large language model I can't help you with this request.",
         ])
-    await ctx.reply(answer)
+    await message.reply(answer)
 
 
 @TBotD.event
@@ -128,7 +130,7 @@ async def on_message(message):
     if message.author.bot:
         return
     if "grok is this true" in message.content.lower():
-        await grok(ctx)
+        await grok(message)
     if message.guild is None:
         return
     connection = TBotD.db_connection
@@ -316,7 +318,7 @@ async def bottle(ctx: commands.Context):
 async def bible(ctx: commands.Context):
     bl.log(bible, ctx)
     verse = await fetch_random_verse()
-    ctx.reply(verse)
+    await ctx.reply(verse)
 
 
 @TBotD.command()
@@ -377,7 +379,7 @@ async def fetch_random_verse() -> str:
             book = data.get("book", "Unknown Book")
             chapter = data.get("chapter", 0)
             verse = data.get("verse", 0)
-            text = data.get("text", "The industrial revolution and its consequences have been a disaster for the human race.")
+            text = data.get("text", "The industrial revolution and its consequences have been a disaster for the human race.").strip()
             answer = f"({book} {chapter}:{verse}) \"{text}\""
         except httpx.HTTPError as exc:
             bl.error_log(exc)
