@@ -3,6 +3,7 @@ import re
 import time
 
 import aiosqlite
+import httpx
 import discord
 from discord.ext import commands
 
@@ -312,6 +313,13 @@ async def bottle(ctx: commands.Context):
 
 
 @TBotD.command()
+async def bible(ctx: commands.Context):
+    bl.log(bible, ctx)
+    verse = await fetch_random_verse()
+    ctx.reply(verse)
+
+
+@TBotD.command()
 async def when(ctx: commands.Context, *, post: str = ""):
     """Parse a date!"""
     bl.log(when, ctx)
@@ -357,6 +365,23 @@ async def on_command_error(ctx: commands.Context, error: commands.CommandError):
                 f"on_command_error : {error} : {ctx.message.content}"
             )
             await ctx.message.add_reaction(DENIED)
+
+
+async def fetch_random_verse() -> str:
+    answer = "(1 Kings 2:23) And he went up from thence unto Bethel: and as he was going up by the way, there came forth little children out of the city, and mocked him, and said unto him, Go up, thou bald head; go up, thou bald head."
+    async with httpx.AsyncClient() as client:
+        try:
+            response = await client.get("https://bible-api.com/data/web/random")
+            response.raise_for_status()
+            data = response.json().get("random_verse", {})
+            book = data.get("book", "Unknown Book")
+            chapter = data.get("chapter", 0)
+            verse = data.get("verse", 0)
+            text = data.get("text", "The industrial revolution and its consequences have been a disaster for the human race.")
+            answer = f"({book} {chapter}:{verse}) \"{text}\""
+        except httpx.HTTPError as exc:
+            bl.error_log(exc)
+    return answer
 
 
 if __name__ == "__main__":
