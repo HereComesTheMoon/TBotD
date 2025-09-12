@@ -72,10 +72,13 @@ class Reminders(commands.Cog):
             )
         await self.db.commit()
 
-    @commands.command(aliases=["rm"])
+    @commands.command(aliases=["rm, remind"])
     async def remindme(self, ctx: commands.Context, *, arg: str = ""):
         """eg. !remindme 5 hours, take out the trash"""
         bl.log(self.remindme, ctx)
+        arg = arg.strip()
+        if arg.startswith("me"):
+            arg = arg[2:].strip()
         if "," in arg:
             when, what = arg.split(sep=",", maxsplit=1)
             when, what = when.strip(), what.strip()

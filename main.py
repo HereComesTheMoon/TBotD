@@ -104,11 +104,30 @@ async def on_ready():
         await TBotD.add_cog(tbdtools.TBDTools(TBotD, connection))
 
 
+async def grok(ctx):
+    answer = ""
+    rng = random.randint(1, 100)
+    if 1 <= rng < 40:
+        answer = "yeah"
+    elif 40 <= rng < 80:
+        answer = "nah"
+    else:
+        answer = random.choice([
+            "meditate upon it and become wiser",
+            "hmmmmm yeah nah, mhmmm maybe, idk",
+            "😏",
+            "As a large language model I can't help you with this request.",
+        ])
+    await ctx.reply(answer)
+
+
 @TBotD.event
 async def on_message(message):
     await TBotD.process_commands(message)
     if message.author.bot:
         return
+    if "grok is this true" in message.content.lower():
+        await grok(ctx)
     if message.guild is None:
         return
     connection = TBotD.db_connection
